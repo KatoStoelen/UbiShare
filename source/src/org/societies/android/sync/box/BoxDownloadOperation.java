@@ -17,12 +17,16 @@ package org.societies.android.sync.box;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.societies.android.box.BoxConstants;
 import org.societies.android.platform.entity.Community;
+import org.societies.android.platform.entity.CommunityActivity;
 import org.societies.android.platform.entity.Entity;
+import org.societies.android.platform.entity.Membership;
+import org.societies.android.platform.entity.Sharing;
 
 import android.content.ContentResolver;
 import android.util.Log;
@@ -45,19 +49,27 @@ public class BoxDownloadOperation extends Thread {
 	private String mAuthToken;
 	private ContentResolver mResolver;
 	private List<? extends BoxFile> mFiles;
+	private BoxHandler mBoxHandler;
+	private List<String> mMissingCommunities;
 	
 	/**
 	 * Initializes a new download operation.
 	 * @param files The files to download.
 	 * @param authToken The authentication token.
+	 * @param boxHandler The BoxHandler instance.
 	 * @param resolver The content resolver.
 	 */
 	public BoxDownloadOperation(
-			List<? extends BoxFile> files, String authToken, ContentResolver resolver) {
+			List<? extends BoxFile> files,
+			String authToken,
+			BoxHandler boxHandler,
+			ContentResolver resolver) {
 		mFiles = files;
 		mAuthToken = authToken;
 		mResolver = resolver;
+		mBoxHandler = boxHandler;
 		mBoxInstance = BoxSynchronous.getInstance(BoxConstants.API_KEY);
+		mMissingCommunities = new ArrayList<String>();
 	}
 	
 	@Override
@@ -74,6 +86,15 @@ public class BoxDownloadOperation extends Thread {
 			
 			for (BoxFile boxFile : downloadQueue)
 				processFile(boxFile);
+			
+			for (String communityGlobalId : mMissingCommunities) {
+				long globalId = Long.parseLong(communityGlobalId);
+				
+				List<BoxFile> communityFiles = mBoxHandler.getFilesInFolder(globalId);
+				
+				new BoxDownloadOperation(
+						communityFiles, mAuthToken, mBoxHandler, mResolver).run();
+			}
 		} catch (Exception e) {
 			Log.e(TAG, e.getMessage(), e);
 		}
@@ -95,13 +116,18 @@ public class BoxDownloadOperation extends Thread {
 		} else {
 			String serialized = downloadFileContents(boxFile);
 			Entity entity = getEntity(boxFile, serialized, entityClass);
-			entity.setAccountName(Entity.SELECTION_ACCOUNT_NAME);
-			entity.setAccountType(Entity.SELECTION_ACCOUNT_TYPE);
 			
-			if (entity.getId() == -1)
-				entity.insert(mResolver);
-			else
-				entity.update(mResolver);
+			if (entity != null) {
+				if (communityExists(entity)) {
+					entity.setAccountName(Entity.SELECTION_ACCOUNT_NAME);
+					entity.setAccountType(Entity.SELECTION_ACCOUNT_TYPE);
+					
+					if (entity.getId() == -1)
+						entity.insert(mResolver);
+					else
+						entity.update(mResolver);
+				}
+			}
 		}
 	}
 
@@ -158,6 +184,49 @@ public class BoxDownloadOperation extends Thread {
 	 */
 	private boolean isDeletedFile(BoxFile boxFile) {
 		return boxFile.getFileName().endsWith(BoxHandler.ENTITY_DELETED_EXTENSION);
+	}
+	
+	/**
+	 * Checks whether the community of the specified entity exists. If not,
+	 * the community needs to be downloaded before inserting the entity into
+	 * the database.
+	 * @param entity The entity to check.
+	 * @return Whether or not the community of the entity exists.
+	 * @throws Exception If an error occurs while interacting with the database.
+	 */
+	private boolean communityExists(Entity entity) throws Exception {
+		if (entity instanceof Community)
+			return true;
+		
+		String communityGlobalId = getCommunityGlobalId(entity);
+		
+		if (Community.communityExists(communityGlobalId, mResolver)) {
+			return true;
+		} else {
+			if (communityGlobalId != null)
+				mMissingCommunities.add(communityGlobalId);
+			
+			return false;
+		}
+	}
+	
+	/**
+	 * Gets the global ID of the community related to the specified entity.
+	 * @param entity An entity related to a community.
+	 * @return The global ID of the community related to the entity.
+	 */
+	private String getCommunityGlobalId(Entity entity) {
+		String communityGlobalId = null;
+		if (entity instanceof Membership)
+			communityGlobalId = ((Membership) entity).getGlobalIdCommunity();
+		else if (entity instanceof CommunityActivity)
+			communityGlobalId = ((CommunityActivity) entity).getGlobalIdFeedOwner();
+		else if (entity instanceof Sharing)
+			communityGlobalId = ((Sharing) entity).getGlobalIdCommunity();
+		else if (entity instanceof Community)
+			communityGlobalId = entity.getGlobalId();
+		
+		return communityGlobalId;
 	}
 
 	/**
