@@ -20,6 +20,6 @@ package org.societies.android.p2p;
  * 
  * @author Kato
  */
-public class BluetoothConnection implements P2PConnection {
+class BluetoothConnection implements IP2PConnection {
 
 }

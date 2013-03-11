@@ -20,6 +20,6 @@ package org.societies.android.p2p;
  * 
  * @author Kato
  */
-public class P2PSyncClient extends Thread {
+class P2PSyncClient extends Thread {
 
 }

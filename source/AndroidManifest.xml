@@ -5,8 +5,8 @@
     android:versionName="1.0" >
 
     <uses-sdk
-        android:minSdkVersion="8"
-        android:targetSdkVersion="8" />
+        android:minSdkVersion="14"
+        android:targetSdkVersion="14" />
 
     <!-- Permission needed to read social data from SocialProvider -->
     <permission
@@ -23,13 +23,24 @@
         android:protectionLevel="dangerous" >
     </permission>
 
+    <!-- Misc permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    
+    <!-- Accounts permissions -->
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.USE_CREDENTIALS" />
     <uses-permission android:name="android.permission.MANAGE_ACCOUNTS" />
     <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
-    <uses-permission android:name="android.permission.INTERNET" />
+    
+    <!-- SyncAdapter permissions -->
     <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
 	<uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
+	
+	<!-- WiFi Direct permissions -->
+	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+	<uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+	<uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:debuggable="true"

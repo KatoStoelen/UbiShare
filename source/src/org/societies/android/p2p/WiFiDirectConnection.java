@@ -20,6 +20,6 @@ package org.societies.android.p2p;
  * 
  * @author Kato
  */
-public class WiFiDirectConnection implements P2PConnection {
+class WiFiDirectConnection implements IP2PConnection {
 
 }

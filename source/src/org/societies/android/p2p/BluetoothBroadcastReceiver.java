@@ -24,7 +24,7 @@ import android.content.Intent;
  * 
  * @author Kato
  */
-public class BluetoothBroadcastReceiver extends BroadcastReceiver {
+class BluetoothBroadcastReceiver extends BroadcastReceiver {
 
 	@Override
 	public void onReceive(Context context, Intent intent) {

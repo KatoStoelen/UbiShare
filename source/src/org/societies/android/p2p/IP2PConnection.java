@@ -20,6 +20,6 @@ package org.societies.android.p2p;
  * 
  * @author Kato
  */
-public interface P2PConnection {
+interface IP2PConnection {
 
 }
