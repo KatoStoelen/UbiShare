@@ -42,7 +42,7 @@ public abstract class Entity {
 	public static String SELECTION_ACCOUNT_NAME = null;
 	
 	/** The default local ID of an entity. */
-	protected static final long ENTITY_DEFAULT_ID = -1;
+	public static final long ENTITY_DEFAULT_ID = -1;
 	
 	private String accountType = SELECTION_ACCOUNT_TYPE;
 	private String accountName = SELECTION_ACCOUNT_NAME;

@@ -21,9 +21,13 @@ import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
+import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.net.wifi.p2p.WifiP2pManager.ActionListener;
+import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
+import android.util.SparseArray;
 
 /**
  * The P2PSyncManager handles the creation of WiFi Direct groups
@@ -58,11 +62,32 @@ public class P2PSyncManager {
 		ON
 	}
 	
+	/**
+	 * An enum of synchronization roles.
+	 */
+	public enum SyncRole {
+		/** Indicates that the current device is the server. */
+		SERVER,
+		
+		/** Indicates that the current device is a client. */
+		CLIENT
+	}
+	
+	private static final SparseArray<String> errorReasonsWifiDirect;
+	
+	static {
+		errorReasonsWifiDirect = new SparseArray<String>();
+		errorReasonsWifiDirect.append(WifiP2pManager.ERROR, "INTERNAL ERROR");
+		errorReasonsWifiDirect.append(WifiP2pManager.P2P_UNSUPPORTED, "P2P_UNSUPPORTED");
+		errorReasonsWifiDirect.append(WifiP2pManager.BUSY, "BUSY");
+	}
+	
 	private ConnectionType mConnectionType;
 	private WifiP2pManager mWifiP2pManager;
 	private IntentFilter mIntentFilter;
 	private Context mContext;
 	private BroadcastReceiver mBroadcastReceiver;
+	private Channel mChannel;
 	
 	private final IP2PListener mP2pListener;
 	
@@ -80,6 +105,7 @@ public class P2PSyncManager {
 		mBroadcastReceiver = getBroadcastReceiver(connectionType);
 		mWifiP2pManager = (WifiP2pManager) context.getSystemService(Context.WIFI_P2P_SERVICE);
 		mP2pListener = p2pListener;
+		mChannel = mWifiP2pManager.initialize(context, context.getMainLooper(), null);
 	}
 	
 	/**
@@ -91,7 +117,8 @@ public class P2PSyncManager {
 		if (connectionType == ConnectionType.BLUETOOTH)
 			return new BluetoothBroadcastReceiver();
 		else if (connectionType == ConnectionType.WIFI_DIRECT)
-			return new WiFiDirectBroadcastReceiver(mP2pListener, mConnectionListener);
+			return new WiFiDirectBroadcastReceiver(
+					mP2pListener, mConnectionListener, mWifiP2pManager, mChannel);
 		else
 			return null;
 	}
@@ -131,13 +158,87 @@ public class P2PSyncManager {
 		mContext.unregisterReceiver(mBroadcastReceiver);
 	}
 	
+	/**
+	 * Starts the discovering of peers. This is an asynchronous call.
+	 */
+	public void discoverPeers() {
+		if (mConnectionType == ConnectionType.WIFI_DIRECT)
+			discoverPeersWifiDirect();
+		else if (mConnectionType == ConnectionType.BLUETOOTH)
+			discoverPeersBluetooth();
+	}
+	
+	/**
+	 * Starts the discovering of peers using WiFi Direct.
+	 */
+	private void discoverPeersWifiDirect() {
+		mWifiP2pManager.discoverPeers(mChannel, new ActionListener() {
+			
+			public void onSuccess() { /* Deliberately empty */ }
+
+			public void onFailure(int reason) {
+				mP2pListener.onDiscoverPeersFailure(
+						errorReasonsWifiDirect.get(reason), ConnectionType.WIFI_DIRECT);
+			}
+		});
+	}
+	
+	/**
+	 * Starts the discovering of peers using Bluetooth.
+	 */
+	private void discoverPeersBluetooth() {
+		// TODO: IMPLEMENT
+	}
+	
+	/**
+	 * Starts the connection to the specified device. This is an asynchronous call.
+	 * @param device The device to connect to.
+	 */
+	public void connectTo(P2PDevice device) {
+		if (device instanceof WiFiDirectP2PDevice)
+			connectToWifiDirectDevice((WiFiDirectP2PDevice) device);
+		else if (device instanceof BluetoothP2PDevice)
+			connectToBluetoothDevice((BluetoothP2PDevice) device);
+	}
+	
+	/**
+	 * Starts the connection to the specified WiFi Direct device.
+	 * @param device The device to connect to.
+	 */
+	private void connectToWifiDirectDevice(WiFiDirectP2PDevice device) {
+		WifiP2pConfig config = new WifiP2pConfig();
+		config.deviceAddress = device.getAddress();
+		
+		mWifiP2pManager.connect(mChannel, config, new ActionListener() {
+			
+			public void onSuccess() { /* Deliberately empty */ }
+			
+			public void onFailure(int reason) {
+				mP2pListener.onConnectFailure(
+						errorReasonsWifiDirect.get(reason), ConnectionType.WIFI_DIRECT);
+			}
+		});
+	}
+	
+	/**
+	 * Starts the connection to the specified Bluetooth device.
+	 * @param device The device to connect to.
+	 */
+	private void connectToBluetoothDevice(BluetoothP2PDevice device) {
+		// TODO: IMPLEMENT
+	}
+	
 	private final ConnectionInfoListener mConnectionListener = new ConnectionInfoListener() {
 		public void onConnectionInfoAvailable(WifiP2pInfo info) {
 			if (info.groupFormed && info.isGroupOwner) {
 				// TODO: Start Sync Server
+				mP2pListener.onSuccessfulConnection(
+						SyncRole.SERVER, ConnectionType.WIFI_DIRECT);
 			} else if (info.groupFormed) {
 				InetAddress groupOwnerAddress = info.groupOwnerAddress;
 				// TODO: Start Sync Client
+				mP2pListener.onSuccessfulConnection(
+						SyncRole.CLIENT, ConnectionType.WIFI_DIRECT);
 			}
 		}
 	};
