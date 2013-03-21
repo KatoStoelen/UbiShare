@@ -15,11 +15,49 @@
  */
 package org.societies.android.p2p;
 
+import java.io.IOException;
+
+import org.societies.android.p2p.entity.Request;
+import org.societies.android.p2p.entity.Response;
+
 /**
  * An interface defining required methods of peer-to-peer connections.
  * 
  * @author Kato
  */
 interface IP2PConnection {
-
+	
+	/**
+	 * Reads a request from the input stream of the connection.
+	 * @return The read request, or <code>null</code> if nothing was read.
+	 * @throws IOException If an error occurs while reading.
+	 */
+	public Request readRequest() throws IOException;
+	
+	/**
+	 * Reads a response from the input stream of the connection.
+	 * @return The read response, or <code>null</code> if nothing was read.
+	 * @throws IOException If an error occurs while reading.
+	 */
+	public Response readResponse() throws IOException;
+	
+	/**
+	 * Writes a request to the output stream of the connection.
+	 * @param request The request to write.
+	 * @throws IOException If an error occurs while writing.
+	 */
+	public void write(Request request) throws IOException;
+	
+	/**
+	 * Writes a response to the output stream of the connection.
+	 * @param response The response to write.
+	 * @throws IOException If an error occurs while writing.
+	 */
+	public void write(Response response) throws IOException;
+	
+	/**
+	 * Closes the connection.
+	 * @throws IOException If an error occurs while closing the connection.
+	 */
+	public void close() throws IOException;
 }

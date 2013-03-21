@@ -25,7 +25,7 @@ import org.societies.android.p2p.P2PSyncManager.ConnectionType;
  * 
  * @author Kato
  */
-abstract class P2PDevice {
+public abstract class P2PDevice {
 
 	private ConnectionType mConnectionType;
 	

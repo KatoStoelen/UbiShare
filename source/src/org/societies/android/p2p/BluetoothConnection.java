@@ -15,11 +15,53 @@
  */
 package org.societies.android.p2p;
 
+import java.io.IOException;
+
+import org.societies.android.p2p.entity.Request;
+import org.societies.android.p2p.entity.Response;
+
 /**
  * Provides a Bluetooth communication channel.
  * 
  * @author Kato
  */
 class BluetoothConnection implements IP2PConnection {
+
+	/* (non-Javadoc)
+	 * @see org.societies.android.p2p.IP2PConnection#readRequest()
+	 */
+	public Request readRequest() throws IOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.societies.android.p2p.IP2PConnection#readResponse()
+	 */
+	public Response readResponse() throws IOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.societies.android.p2p.IP2PConnection#write(org.societies.android.p2p.entity.Request)
+	 */
+	public void write(Request request) throws IOException {
+		// TODO Auto-generated method stub
+	}
+
+	/* (non-Javadoc)
+	 * @see org.societies.android.p2p.IP2PConnection#write(org.societies.android.p2p.entity.Response)
+	 */
+	public void write(Response response) throws IOException {
+		// TODO Auto-generated method stub
+	}
+
+	/* (non-Javadoc)
+	 * @see org.societies.android.p2p.IP2PConnection#close()
+	 */
+	public void close() throws IOException {
+		// TODO Auto-generated method stub
+	}
 
 }

@@ -15,23 +15,12 @@
  */
 package org.societies.android.p2p;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
-import java.lang.reflect.Type;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.Collection;
 
+import org.societies.android.p2p.entity.Request;
 import org.societies.android.platform.entity.Entity;
-import org.societies.android.platform.entity.EntityTypeAdapter;
 
-import com.google.renamedgson.Gson;
-import com.google.renamedgson.GsonBuilder;
-import com.google.renamedgson.reflect.TypeToken;
-
-import android.content.ContentResolver;
 import android.content.Context;
 import android.util.Log;
 
@@ -47,42 +36,46 @@ class P2PSyncServer extends Thread {
 	
 	/** The port number of the sync server. */
 	public static final int PORT = 8888;
-	/** The number of milliseconds */
-	private static final int ACCEPT_TIMEOUT = 200;
 	
 	private boolean mStopping;
 	private Context mContext;
+	private IConnectionListener mListener;
 	
 	/**
 	 * Initializes a new sync server.
+	 * @param context The context to use, cannot be <code>null</code>.
+	 * @param listener The connection listener, cannot be <code>null</code>.
 	 */
-	public P2PSyncServer(Context context) {
+	public P2PSyncServer(Context context, IConnectionListener listener) {
+		if (context == null)
+			throw new IllegalArgumentException("Context cannot be null");
+		if (listener == null)
+			throw new IllegalArgumentException("Connection listener cannot be null");
+		
 		mContext = context;
+		mListener = listener;
 		mStopping = false;
 	}
 
 	@Override
 	public void run() {
-		ServerSocket serverSocket = null;
 		try {
-			serverSocket = new ServerSocket(PORT);
-			serverSocket.setSoTimeout(ACCEPT_TIMEOUT);
+			mListener.initialize();
 			
 			while (!mStopping) {
 				try {
-					Socket clientSocket = serverSocket.accept();
+					IP2PConnection connection = mListener.acceptConnection();
 					
-					new ClientHandler(clientSocket, mContext).start();
+					if (connection != null)
+						new ClientHandler(connection, mContext).start();
 				} catch(InterruptedIOException e) { /* Ignore */ }
 			}
 		} catch (IOException e) {
 			Log.e(TAG, e.getMessage(), e);
 		} finally {
-			if (serverSocket != null) {
-				try {
-					serverSocket.close();
-				} catch (IOException e) { /* Ignore */ }
-			}
+			try {
+				mListener.close();
+			} catch (IOException e) { /* Ignore */ }
 		}
 	}
 	
@@ -102,65 +95,51 @@ class P2PSyncServer extends Thread {
 		
 		public static final String TAG = P2PSyncServer.TAG + ":ClientHandler";
 		
-		private Socket mClientSocket;
+		private IP2PConnection mConnection;
 		private Context mContext;
 		
 		/**
 		 * Initializes a new client handler.
-		 * @param clientSocket The client connection representing socket. Cannot
+		 * @param connection The peer-to-peer connection. Cannot
 		 * be <code>null</code>.
 		 * @param context The context to use.
 		 */
-		public ClientHandler(Socket clientSocket, Context context) {
-			if (clientSocket == null)
+		public ClientHandler(IP2PConnection connection, Context context) {
+			if (connection == null)
 				throw new IllegalArgumentException();
 			
-			mClientSocket = clientSocket;
+			mConnection = connection;
 			mContext = context;
 		}
 		
 		@Override
 		public void run() {
-			BufferedReader reader = null;
 			try {
-				reader = new BufferedReader(
-						new InputStreamReader(mClientSocket.getInputStream()));
-				
-				StringBuilder builder = new StringBuilder();
-				
-				String line;
-				while ((line = reader.readLine()) != null)
-					builder.append(line);
-				
-				handleData(builder.toString());
+				handleRequest(mConnection.readRequest());
 			} catch (IOException e) {
 				Log.e(TAG, e.getMessage(), e);
 			} finally {
-				if (reader != null) {
-					try {
-						reader.close();
-					} catch (IOException e) { /* Ignore */ }
-				}
-				
-				closeConnection();
+				try {
+					mConnection.close();
+				} catch (IOException e) { /* Ignore */ }
 			}
 		}
 		
 		/**
-		 * Handles the data received from the client.
+		 * Handles the received request.
 		 * @param serializedData The serialized data received.
 		 */
-		private void handleData(String serializedData) {
-			Gson serializer = new GsonBuilder()
-				.registerTypeAdapter(Entity.class, new EntityTypeAdapter())
-				.create();
+		private void handleRequest(Request request) {
+			if (request == null) {
+				Log.e(TAG, "Received request: null");
+				return;
+			}
 			
-			Type collectionType = new TypeToken<Collection<Entity>>(){}.getType();
+			Log.i(TAG, "Request Type: " + request.getType());
+			Log.i(TAG, "Last Request Time: " + request.getLastRequestTime());
+			Log.i(TAG, "# Entities: " + request.getUpdatedEntities().size());
 			
-			Collection<Entity> entities = serializer.fromJson(
-					serializedData, collectionType);
-			
-			for (Entity entity : entities) {
+			for (Entity entity : request.getUpdatedEntities()) {
 				entity.fetchLocalId(mContext.getContentResolver());
 				
 				/*
@@ -172,15 +151,6 @@ class P2PSyncServer extends Thread {
 				
 				Log.i(TAG, entity.serialize());
 			}
-		}
-		
-		/**
-		 * Closes the connection to the client.
-		 */
-		private void closeConnection() {
-			try {
-				mClientSocket.close();
-			} catch (IOException e) { /* Ignore */ }
 		}
 	}
 }
