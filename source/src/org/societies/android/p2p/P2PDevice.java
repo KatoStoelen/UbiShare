@@ -41,7 +41,7 @@ public abstract class P2PDevice {
 	 * Gets the connection type of the device.
 	 * @return The connection type of the device.
 	 */
-	public ConnectionType getDeviceType() {
+	public ConnectionType getConnectionType() {
 		return mConnectionType;
 	}
 	

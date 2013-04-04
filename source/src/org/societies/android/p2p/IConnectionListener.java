@@ -49,9 +49,9 @@ interface IConnectionListener {
 	 * Accepts an incoming connection. Blocks until a connection is found
 	 * or the timeout value is exceeded.
 	 * @return The established peer-to-peer connection.
-	 * @see IP2PConnection#ACCEPT_TIMEOUT
+	 * @see P2PConnection#ACCEPT_TIMEOUT
 	 * @throws IOException If an error occurs while accepting connection.
 	 * @throws InterruptedIOException If the timeout value is exceeded.
 	 */
-	public IP2PConnection acceptConnection() throws IOException, InterruptedIOException;
+	public P2PConnection acceptConnection() throws IOException, InterruptedIOException;
 }

@@ -15,20 +15,61 @@
  */
 package org.societies.android.p2p.entity;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
+import org.societies.android.platform.entity.Entity;
+
+import com.google.renamedgson.Gson;
+import com.google.renamedgson.GsonBuilder;
+
 /**
- * A response entity.
+ * A response entity used to send updates to clients.
  * 
  * @author Kato
  */
 public class Response {
 	
+	private Collection<Entity> mEntities = new ArrayList<Entity>();
 	
-	
+	/**
+	 * Serializes the response to a string.
+	 * @return A string representing the serialized response.
+	 */
 	public String serialize() {
-		return null;
+		Gson serializer = new GsonBuilder()
+			.registerTypeAdapter(Response.class, new ResponseTypeAdapter())
+			.create();
+		
+		return serializer.toJson(this, Response.class);
 	}
 	
+	/**
+	 * Deserializes the specified string into a response.
+	 * @param serialized The serialized response.
+	 * @return The deserialized response.
+	 */
 	public static Response deserialize(String serialized) {
-		return null;
+		Gson serializer = new GsonBuilder()
+			.registerTypeAdapter(Response.class, new ResponseTypeAdapter())
+			.create();
+		
+		return serializer.fromJson(serialized, Response.class);
+	}
+
+	/**
+	 * Gets the list of entities.
+	 * @return The list of entities.
+	 */
+	public Collection<Entity> getEntities() {
+		return mEntities;
+	}
+
+	/**
+	 * Sets the list of entities.
+	 * @param entities The list of entities.
+	 */
+	public void setEntities(Collection<Entity> entities) {
+		mEntities = entities;
 	}
 }

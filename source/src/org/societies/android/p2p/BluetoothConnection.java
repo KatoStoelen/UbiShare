@@ -16,6 +16,7 @@
 package org.societies.android.p2p;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 
 import org.societies.android.p2p.entity.Request;
 import org.societies.android.p2p.entity.Response;
@@ -25,43 +26,37 @@ import org.societies.android.p2p.entity.Response;
  * 
  * @author Kato
  */
-class BluetoothConnection implements IP2PConnection {
+class BluetoothConnection extends P2PConnection {
 
-	/* (non-Javadoc)
-	 * @see org.societies.android.p2p.IP2PConnection#readRequest()
-	 */
-	public Request readRequest() throws IOException {
+	@Override
+	protected String readToEnd() throws IOException, InterruptedIOException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.societies.android.p2p.IP2PConnection#readResponse()
-	 */
-	public Response readResponse() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.societies.android.p2p.IP2PConnection#write(org.societies.android.p2p.entity.Request)
-	 */
+	@Override
 	public void write(Request request) throws IOException {
 		// TODO Auto-generated method stub
 	}
 
-	/* (non-Javadoc)
-	 * @see org.societies.android.p2p.IP2PConnection#write(org.societies.android.p2p.entity.Response)
-	 */
+	@Override
 	public void write(Response response) throws IOException {
 		// TODO Auto-generated method stub
 	}
 
-	/* (non-Javadoc)
-	 * @see org.societies.android.p2p.IP2PConnection#close()
-	 */
+	@Override
 	public void close() throws IOException {
 		// TODO Auto-generated method stub
 	}
 
+	@Override
+	public boolean isConnected() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void connect() throws IOException, InterruptedIOException {
+		// TODO Auto-generated method stub
+	}
 }

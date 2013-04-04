@@ -88,6 +88,8 @@ public class P2PSyncManager {
 	private Context mContext;
 	private BroadcastReceiver mBroadcastReceiver;
 	private Channel mChannel;
+	private P2PSyncServer mSyncServer;
+	private P2PSyncClient mSyncClient;
 	
 	private final IP2PListener mP2pListener;
 	
@@ -228,15 +230,59 @@ public class P2PSyncManager {
 		// TODO: IMPLEMENT
 	}
 	
+	/**
+	 * Starts the sync server.
+	 */
+	private void startSyncServer() {
+		stopSync(true);
+		
+		mSyncServer = new P2PSyncServer(
+				mContext, new WiFiDirectConnectionListener(P2PSyncServer.PORT));
+	}
+	
+	/**
+	 * Starts the sync client.
+	 * @param groupOwnerAddress The address of the group owner.
+	 */
+	private void startSyncClient(InetAddress groupOwnerAddress) {
+		stopSync(true);
+		
+		mSyncClient = new P2PSyncClient(
+				new WiFiDirectConnection(groupOwnerAddress),
+				P2PSyncClient.DEFAULT_SYNC_INTERVAL,
+				mContext);
+	}
+	
+	/**
+	 * Stops the synchronization.
+	 * @param awaitTermination Whether or not to block until the
+	 * synchronization has terminated.
+	 */
+	public void stopSync(boolean awaitTermination) {
+		if (mSyncServer != null) {
+			try {
+				mSyncServer.stopServer(awaitTermination);
+			} catch (InterruptedException e) { /* Ignore */ }
+		}
+		
+		if (mSyncClient != null) {
+			try {
+				mSyncClient.stopSyncClient(awaitTermination);
+			} catch (InterruptedException e) { /* Ignore */ }
+		}
+	}
+	
 	private final ConnectionInfoListener mConnectionListener = new ConnectionInfoListener() {
 		public void onConnectionInfoAvailable(WifiP2pInfo info) {
 			if (info.groupFormed && info.isGroupOwner) {
-				// TODO: Start Sync Server
+				startSyncServer();
+				
 				mP2pListener.onSuccessfulConnection(
 						SyncRole.SERVER, ConnectionType.WIFI_DIRECT);
 			} else if (info.groupFormed) {
 				InetAddress groupOwnerAddress = info.groupOwnerAddress;
-				// TODO: Start Sync Client
+				startSyncClient(groupOwnerAddress);
+				
 				mP2pListener.onSuccessfulConnection(
 						SyncRole.CLIENT, ConnectionType.WIFI_DIRECT);
 			}

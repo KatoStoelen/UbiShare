@@ -61,7 +61,7 @@ public class WiFiDirectConnectionListener implements IConnectionListener {
 	/* (non-Javadoc)
 	 * @see org.societies.android.p2p.IConnectionListener#acceptConnection()
 	 */
-	public IP2PConnection acceptConnection() throws IOException, InterruptedIOException {
+	public P2PConnection acceptConnection() throws IOException, InterruptedIOException {
 		if (!mIsInitialized)
 			throw new IllegalStateException("Listener not initialized");
 		

@@ -24,7 +24,7 @@ import com.google.renamedgson.Gson;
 import com.google.renamedgson.GsonBuilder;
 
 /**
- * A request entity.
+ * A request entity used to request updates from the server.
  * 
  * @author Kato
  */
@@ -39,9 +39,6 @@ public class Request {
 		
 		/** Indicates a request to fetch updated data. */
 		FETCH_UPDATES,
-		
-		/** Indicates a request to push data from the client and fetch updated data. */
-		PUSH_AND_FETCH
 	}
 	
 	private RequestType mType;

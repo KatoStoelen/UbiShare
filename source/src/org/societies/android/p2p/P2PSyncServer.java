@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 
 import org.societies.android.p2p.entity.Request;
+import org.societies.android.p2p.entity.Request.RequestType;
+import org.societies.android.p2p.entity.Response;
 import org.societies.android.platform.entity.Entity;
 
 import android.content.Context;
@@ -64,7 +66,7 @@ class P2PSyncServer extends Thread {
 			
 			while (!mStopping) {
 				try {
-					IP2PConnection connection = mListener.acceptConnection();
+					P2PConnection connection = mListener.acceptConnection();
 					
 					if (connection != null)
 						new ClientHandler(connection, mContext).start();
@@ -81,9 +83,16 @@ class P2PSyncServer extends Thread {
 	
 	/**
 	 * Stops the sync server.
+	 * @param awaitTermination Whether or not to block until the server
+	 * has terminated.
+	 * @throws InterruptedException If awaiting termination and thread is
+	 * interrupted.
 	 */
-	public void stopServer() {
+	public void stopServer(boolean awaitTermination) throws InterruptedException {
 		mStopping = true;
+		
+		if (awaitTermination && isAlive())
+			join();
 	}
 	
 	/**
@@ -95,7 +104,7 @@ class P2PSyncServer extends Thread {
 		
 		public static final String TAG = P2PSyncServer.TAG + ":ClientHandler";
 		
-		private IP2PConnection mConnection;
+		private P2PConnection mConnection;
 		private Context mContext;
 		
 		/**
@@ -104,9 +113,9 @@ class P2PSyncServer extends Thread {
 		 * be <code>null</code>.
 		 * @param context The context to use.
 		 */
-		public ClientHandler(IP2PConnection connection, Context context) {
+		public ClientHandler(P2PConnection connection, Context context) {
 			if (connection == null)
-				throw new IllegalArgumentException();
+				throw new IllegalArgumentException("Connection is null");
 			
 			mConnection = connection;
 			mContext = context;
@@ -116,6 +125,8 @@ class P2PSyncServer extends Thread {
 		public void run() {
 			try {
 				handleRequest(mConnection.readRequest());
+			} catch (InterruptedIOException iioe) {
+				Log.e(TAG, "Timed out while reading request");
 			} catch (IOException e) {
 				Log.e(TAG, e.getMessage(), e);
 			} finally {
@@ -129,11 +140,13 @@ class P2PSyncServer extends Thread {
 		 * Handles the received request.
 		 * @param serializedData The serialized data received.
 		 */
-		private void handleRequest(Request request) {
+		private void handleRequest(Request request) throws IOException {
 			if (request == null) {
 				Log.e(TAG, "Received request: null");
 				return;
 			}
+			
+			//sendReponse(request.getLastRequestTime(), request.getType());
 			
 			Log.i(TAG, "Request Type: " + request.getType());
 			Log.i(TAG, "Last Request Time: " + request.getLastRequestTime());
@@ -151,6 +164,24 @@ class P2PSyncServer extends Thread {
 				
 				Log.i(TAG, entity.serialize());
 			}
+		}
+		
+		/**
+		 * Sends the response to the client.
+		 * @param lastRequest The timestamp of the last request (UNIX time in
+		 * seconds).
+		 * @param requestType The type of the request.
+		 * @throws IOException If an error occurs while sending response.
+		 */
+		private void sendReponse(
+				long lastRequest, RequestType requestType) throws IOException {
+			Response response = new Response();
+			if (requestType == RequestType.FETCH_ALL)
+				; // TODO: response.setEntities(Entity.getAllEntities());
+			else if (requestType == RequestType.FETCH_UPDATES)
+				; // TODO: response.setEntities(Entity.getUpdatedEntities(lastRequest));
+			
+			mConnection.write(response);
 		}
 	}
 }
