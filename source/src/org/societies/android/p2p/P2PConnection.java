@@ -60,10 +60,11 @@ abstract class P2PConnection {
 	/**
 	 * Tries to establish a connection with the remote host. If the connection
 	 * is already established, the connection is closed and re-opened.
+	 * @return Whether or not the connection was successfully made.
 	 * @throws IOException If an error occurs while connecting.
 	 * @throws InterruptedIOException If the connection attempt times out.
 	 */
-	public abstract void connect() throws IOException, InterruptedIOException;
+	public abstract boolean connect() throws IOException, InterruptedIOException;
 	
 	/**
 	 * Reads a request from the input stream of the connection.

@@ -15,7 +15,11 @@
  */
 package org.societies.android.p2p;
 
+import java.io.IOException;
+import java.io.InterruptedIOException;
+
 import android.content.Context;
+import android.util.Log;
 
 /**
  * A thread sending sync requests to the sync server.
@@ -24,15 +28,20 @@ import android.content.Context;
  */
 class P2PSyncClient extends Thread {
 	
+	public static final String TAG = "P2PSyncClient";
+	
 	/**
 	 * The number of milliseconds between each sync.
 	 */
 	public static final int DEFAULT_SYNC_INTERVAL = 5000;
 
+	private final Object SYNC_LOCK = new Object();
+	
 	private Context mContext;
 	private P2PConnection mConnection;
 	private int mSyncInterval;
 	private boolean mStopping;
+	private boolean mSyncNow;
 	
 	/**
 	 * Initiates a new sync client.
@@ -47,11 +56,59 @@ class P2PSyncClient extends Thread {
 		setSyncInterval(syncInterval);
 		
 		mStopping = false;
+		mSyncNow = false;
 	}
 	
 	@Override
 	public void run() {
-		// TODO: IMPLEMENT
+		try {
+			while (!mStopping) {
+				mSyncNow = false;
+				
+				try {
+					if (!mConnection.connect()) {
+						throw new IOException("Connection not established");
+					} else {
+						// TODO: ONLY SEND IF ANYTHING IS UPDATED.
+						// TODO: SERVER IS TO PUSH UPDATES TO CLIENT.
+					}
+				} finally {
+					mConnection.close();
+				}
+				
+				waitForNextSync();
+			}
+		} catch (InterruptedIOException e) {
+			Log.e(TAG, "Failed to connect to server: timeout");
+		} catch (IOException e) {
+			Log.e(TAG, e.getMessage(), e);
+		} catch (InterruptedException e) {
+			Log.e(TAG, "Interrupted while waiting");
+		}
+	}
+	
+	/**
+	 * Waits the number of milliseconds specified by the sync interval.
+	 * @throws InterruptedException If the thread is interrupted while
+	 * waiting.
+	 */
+	private void waitForNextSync() throws InterruptedException {
+		if (!mStopping && !mSyncNow) {
+			synchronized (SYNC_LOCK) {
+				SYNC_LOCK.wait(mSyncInterval);
+			}
+		}
+	}
+	
+	/**
+	 * Triggers an immediate synchronization.
+	 */
+	public void syncNow() {
+		mSyncNow = true;
+		
+		synchronized (SYNC_LOCK) {
+			SYNC_LOCK.notify();
+		}
 	}
 	
 	/**

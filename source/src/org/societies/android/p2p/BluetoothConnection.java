@@ -56,7 +56,8 @@ class BluetoothConnection extends P2PConnection {
 	}
 
 	@Override
-	public void connect() throws IOException, InterruptedIOException {
+	public boolean connect() throws IOException, InterruptedIOException {
 		// TODO Auto-generated method stub
+		return false;
 	}
 }

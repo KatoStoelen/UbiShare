@@ -28,8 +28,6 @@ import java.net.Socket;
 import org.societies.android.p2p.entity.Request;
 import org.societies.android.p2p.entity.Response;
 
-import android.util.Log;
-
 /**
  * Provides a Wi-Fi Direct communication channel.
  * 
@@ -143,7 +141,7 @@ class WiFiDirectConnection extends P2PConnection {
 	}
 
 	@Override
-	public void connect() throws IOException, InterruptedIOException {
+	public boolean connect() throws IOException, InterruptedIOException {
 		if (isConnected())
 			close();
 		
@@ -153,5 +151,7 @@ class WiFiDirectConnection extends P2PConnection {
 				CONNECTION_TIMEOUT);
 		
 		initialize(socket);
+		
+		return isConnected();
 	}
 }
