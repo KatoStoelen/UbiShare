@@ -30,30 +30,19 @@ class P2PSyncClient extends Thread {
 	
 	public static final String TAG = "P2PSyncClient";
 	
-	/**
-	 * The number of milliseconds between each sync.
-	 */
-	public static final int DEFAULT_SYNC_INTERVAL = 5000;
-
-	private final Object SYNC_LOCK = new Object();
-	
 	private Context mContext;
 	private P2PConnection mConnection;
-	private int mSyncInterval;
 	private boolean mStopping;
 	private boolean mSyncNow;
 	
 	/**
 	 * Initiates a new sync client.
 	 * @param connection The connection to the server.
-	 * @param syncInterval The number of milliseconds between each sync.
 	 * @param context The context to use.
 	 */
-	public P2PSyncClient(
-			P2PConnection connection, int syncInterval, Context context) {
+	public P2PSyncClient(P2PConnection connection, Context context) {
 		mConnection = connection;
 		mContext = context;
-		setSyncInterval(syncInterval);
 		
 		mStopping = false;
 		mSyncNow = false;
@@ -75,39 +64,11 @@ class P2PSyncClient extends Thread {
 				} finally {
 					mConnection.close();
 				}
-				
-				waitForNextSync();
 			}
 		} catch (InterruptedIOException e) {
 			Log.e(TAG, "Failed to connect to server: timeout");
 		} catch (IOException e) {
 			Log.e(TAG, e.getMessage(), e);
-		} catch (InterruptedException e) {
-			Log.e(TAG, "Interrupted while waiting");
-		}
-	}
-	
-	/**
-	 * Waits the number of milliseconds specified by the sync interval.
-	 * @throws InterruptedException If the thread is interrupted while
-	 * waiting.
-	 */
-	private void waitForNextSync() throws InterruptedException {
-		if (!mStopping && !mSyncNow) {
-			synchronized (SYNC_LOCK) {
-				SYNC_LOCK.wait(mSyncInterval);
-			}
-		}
-	}
-	
-	/**
-	 * Triggers an immediate synchronization.
-	 */
-	public void syncNow() {
-		mSyncNow = true;
-		
-		synchronized (SYNC_LOCK) {
-			SYNC_LOCK.notify();
 		}
 	}
 	
@@ -124,21 +85,5 @@ class P2PSyncClient extends Thread {
 		
 		if (awaitTermination && isAlive())
 			join();
-	}
-
-	/**
-	 * Gets the current sync interval.
-	 * @return The current sync interval.
-	 */
-	public int getSyncInterval() {
-		return mSyncInterval;
-	}
-
-	/**
-	 * Sets the current sync interval.
-	 * @param syncInterval The number of milliseconds between each sync.
-	 */
-	public void setSyncInterval(int syncInterval) {
-		mSyncInterval = syncInterval;
 	}
 }

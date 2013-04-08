@@ -17,6 +17,7 @@ package org.societies.android.p2p;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.io.Serializable;
 
 import org.societies.android.p2p.entity.Request;
 import org.societies.android.p2p.entity.Response;
@@ -26,8 +27,11 @@ import org.societies.android.p2p.entity.Response;
  * 
  * @author Kato
  */
-abstract class P2PConnection {
+abstract class P2PConnection implements Serializable {
 	
+	/** Unique ID. */
+	private static final long serialVersionUID = -7661483437019363736L;
+
 	/**
 	 * The number of milliseconds before a read call times out and a
 	 * <code>InterruptedIOException</code> is thrown.

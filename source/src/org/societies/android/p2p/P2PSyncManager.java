@@ -20,6 +20,7 @@ import java.net.InetAddress;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pInfo;
@@ -88,8 +89,6 @@ public class P2PSyncManager {
 	private Context mContext;
 	private BroadcastReceiver mBroadcastReceiver;
 	private Channel mChannel;
-	private P2PSyncServer mSyncServer;
-	private P2PSyncClient mSyncClient;
 	
 	private final IP2PListener mP2pListener;
 	
@@ -233,24 +232,36 @@ public class P2PSyncManager {
 	/**
 	 * Starts the sync server.
 	 */
-	private void startSyncServer() {
+	private void startSyncServer(ConnectionType connectionType) {
 		stopSync(true);
 		
-		mSyncServer = new P2PSyncServer(
-				mContext, new WiFiDirectConnectionListener(P2PSyncServer.PORT));
+		IConnectionListener listener = null;
+		if (connectionType == ConnectionType.WIFI_DIRECT)
+			listener = new WiFiDirectConnectionListener(P2PSyncServer.PORT);
+		else if (connectionType == ConnectionType.BLUETOOTH)
+			listener = new BluetoothConnectionListener();
+		
+		Intent intent = new Intent(mContext, P2PSyncServerService.class);
+		intent.putExtra(
+				P2PSyncServerService.EXTRA_CONNECTION_LISTENER,
+				listener);
+		
+		mContext.startService(intent);
 	}
 	
 	/**
-	 * Starts the sync client.
+	 * Starts the sync client using WiFi Direct.
 	 * @param groupOwnerAddress The address of the group owner.
 	 */
-	private void startSyncClient(InetAddress groupOwnerAddress) {
+	private void startWifiDirectSyncClient(InetAddress groupOwnerAddress) {
 		stopSync(true);
 		
-		mSyncClient = new P2PSyncClient(
-				new WiFiDirectConnection(groupOwnerAddress),
-				P2PSyncClient.DEFAULT_SYNC_INTERVAL,
-				mContext);
+		Intent intent = new Intent(mContext, P2PSyncClientService.class);
+		intent.putExtra(
+				P2PSyncClientService.EXTRA_CONNECTION,
+				new WiFiDirectConnection(groupOwnerAddress));
+		
+		mContext.startService(intent);
 	}
 	
 	/**
@@ -259,29 +270,19 @@ public class P2PSyncManager {
 	 * synchronization has terminated.
 	 */
 	public void stopSync(boolean awaitTermination) {
-		if (mSyncServer != null) {
-			try {
-				mSyncServer.stopServer(awaitTermination);
-			} catch (InterruptedException e) { /* Ignore */ }
-		}
-		
-		if (mSyncClient != null) {
-			try {
-				mSyncClient.stopSyncClient(awaitTermination);
-			} catch (InterruptedException e) { /* Ignore */ }
-		}
+		// TODO: Implement
 	}
 	
 	private final ConnectionInfoListener mConnectionListener = new ConnectionInfoListener() {
 		public void onConnectionInfoAvailable(WifiP2pInfo info) {
 			if (info.groupFormed && info.isGroupOwner) {
-				startSyncServer();
+				startSyncServer(ConnectionType.WIFI_DIRECT);
 				
 				mP2pListener.onSuccessfulConnection(
 						SyncRole.SERVER, ConnectionType.WIFI_DIRECT);
 			} else if (info.groupFormed) {
 				InetAddress groupOwnerAddress = info.groupOwnerAddress;
-				startSyncClient(groupOwnerAddress);
+				startWifiDirectSyncClient(groupOwnerAddress);
 				
 				mP2pListener.onSuccessfulConnection(
 						SyncRole.CLIENT, ConnectionType.WIFI_DIRECT);

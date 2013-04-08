@@ -34,11 +34,14 @@ public class Request {
 	 * An enum containing types of requests.
 	 */
 	public enum RequestType {
+		/** Indicates a request to notify server of a client's presence. */
+		HANDSHAKE,
+		
 		/** Indicates a request to fetch all data. */
 		FETCH_ALL,
 		
 		/** Indicates a request to fetch updated data. */
-		FETCH_UPDATES,
+		FETCH_UPDATES
 	}
 	
 	private RequestType mType;

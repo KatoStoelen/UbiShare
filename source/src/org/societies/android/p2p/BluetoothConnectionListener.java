@@ -17,60 +17,39 @@ package org.societies.android.p2p;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
-import java.net.ServerSocket;
-import java.net.Socket;
 
 /**
- * Connection listener for WiFi Direct.
+ * Bluetooth connection listener.
  * 
  * @author Kato
  */
-public class WiFiDirectConnectionListener implements IConnectionListener {
-	
+public class BluetoothConnectionListener implements IConnectionListener {
+
 	/** Unique ID. */
-	private static final long serialVersionUID = 7350321224017878410L;
-	
-	private int mPort;
-	transient private ServerSocket mListener;
-	private boolean mIsInitialized;
-	
-	/**
-	 * Initializes a new connection listener on the specified port.
-	 * @param port The port number to listen on.
-	 */
-	public WiFiDirectConnectionListener(int port) {
-		mPort = port;
-		mIsInitialized = false;
-	}
+	private static final long serialVersionUID = 7877091133368946345L;
 
 	/* (non-Javadoc)
 	 * @see org.societies.android.p2p.IConnectionListener#close()
 	 */
 	public void close() throws IOException {
-		if (mListener != null)
-			mListener.close();
+		// TODO Auto-generated method stub
+
 	}
 
 	/* (non-Javadoc)
 	 * @see org.societies.android.p2p.IConnectionListener#initialize()
 	 */
 	public void initialize() throws IOException {
-		mListener = new ServerSocket(mPort);
-		mListener.setSoTimeout(ACCEPT_TIMEOUT);
-		
-		mIsInitialized = true;
+		// TODO Auto-generated method stub
+
 	}
 
 	/* (non-Javadoc)
 	 * @see org.societies.android.p2p.IConnectionListener#acceptConnection()
 	 */
-	public P2PConnection acceptConnection() throws IOException, InterruptedIOException {
-		if (!mIsInitialized)
-			throw new IllegalStateException("Listener is not initialized");
-		
-		Socket clientSocket = mListener.accept();
-		
-		return new WiFiDirectConnection(clientSocket);
+	public P2PConnection acceptConnection() throws IOException,
+			InterruptedIOException {
+		return null;
 	}
 
 }

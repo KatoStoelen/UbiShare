@@ -35,13 +35,16 @@ import org.societies.android.p2p.entity.Response;
  */
 class WiFiDirectConnection extends P2PConnection {
 	
+	/** Unique ID. */
+	private static final long serialVersionUID = -2071972758995959880L;
+
 	public static final String TAG = "WiFiDirectConnection";
 
-	private Socket mSocket;
+	transient private Socket mSocket;
 	private InetAddress mRemoteAddress;
 	
-	private BufferedReader mReader;
-	private BufferedWriter mWriter;
+	transient private BufferedReader mReader;
+	transient private BufferedWriter mWriter;
 	
 	private boolean mInitialized = false;
 	

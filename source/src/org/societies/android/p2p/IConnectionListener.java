@@ -17,13 +17,14 @@ package org.societies.android.p2p;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.io.Serializable;
 
 /**
  * Interface defining required functionality of connection listeners.
  * 
  * @author Kato
  */
-interface IConnectionListener {
+interface IConnectionListener extends Serializable {
 	
 	/**
 	 * The number of milliseconds before a call to acceptConnection times
