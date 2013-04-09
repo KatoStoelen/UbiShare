@@ -29,6 +29,17 @@ import org.societies.android.p2p.entity.Response;
  */
 abstract class P2PConnection implements Serializable {
 	
+	/**
+	 * An enum of supported connection types.
+	 */
+	public enum ConnectionType {
+		/** Specifies Bluetooth as communication channel. */
+		BLUETOOTH,
+		
+		/** Specifies WiFi Direct as communication channel. */
+		WIFI_DIRECT
+	}
+	
 	/** Unique ID. */
 	private static final long serialVersionUID = -7661483437019363736L;
 
@@ -45,6 +56,16 @@ abstract class P2PConnection implements Serializable {
 	 * @see InterruptedIOException
 	 */
 	public static final int CONNECTION_TIMEOUT = 3000;
+	
+	private final ConnectionType mConnectionType;
+	
+	/**
+	 * Initializes a new P2P connection.
+	 * @param connectionType The type of the connection.
+	 */
+	protected P2PConnection(ConnectionType connectionType) {
+		mConnectionType = connectionType;
+	}
 	
 	/**
 	 * Reads to the end of the stream.
@@ -115,4 +136,12 @@ abstract class P2PConnection implements Serializable {
 	 * @throws IOException If an error occurs while closing the connection.
 	 */
 	public abstract void close() throws IOException;
+
+	/**
+	 * Gets the type of the P2P connection.
+	 * @return The type of the connection.
+	 */
+	public ConnectionType getConnectionType() {
+		return mConnectionType;
+	}
 }

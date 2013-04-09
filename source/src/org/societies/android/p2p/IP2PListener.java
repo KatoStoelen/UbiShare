@@ -17,8 +17,8 @@ package org.societies.android.p2p;
 
 import java.util.List;
 
-import org.societies.android.p2p.P2PSyncManager.ConnectionStatus;
-import org.societies.android.p2p.P2PSyncManager.ConnectionType;
+import org.societies.android.p2p.P2PConnection.ConnectionType;
+import org.societies.android.p2p.P2PSyncManager.P2PInterfaceStatus;
 import org.societies.android.p2p.P2PSyncManager.SyncRole;
 
 /**
@@ -40,12 +40,12 @@ public interface IP2PListener {
 			List<P2PDevice> peers, boolean completeList, ConnectionType connectionType);
 	
 	/**
-	 * Called when the status of the P2P connection changes.
-	 * @param status The status of the P2P connection.
+	 * Called when the status of the P2P interface changes.
+	 * @param status The status of the P2P interface.
 	 * @param connectionType The connection type in use.
 	 */
-	public void onP2pConnectionStatusChange(
-			ConnectionStatus status, ConnectionType connectionType);
+	public void onP2pInterfaceStatusChange(
+			P2PInterfaceStatus status, ConnectionType connectionType);
 	
 	/**
 	 * Called when the current device info changes.

@@ -19,32 +19,46 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.io.Serializable;
 
+import org.societies.android.p2p.P2PConnection.ConnectionType;
+
 /**
- * Interface defining required functionality of connection listeners.
+ * Base class of connection listeners.
  * 
  * @author Kato
  */
-interface IConnectionListener extends Serializable {
+abstract class ConnectionListener implements Serializable {
 	
+	/** Unique ID. */
+	private static final long serialVersionUID = -5562556424047117337L;
 	/**
 	 * The number of milliseconds before a call to acceptConnection times
 	 * out and a <code>InterruptedIOException</code> is thrown.
 	 * @see InterruptedIOException
 	 */
 	public static final int ACCEPT_TIMEOUT = 200;
+	
+	private final ConnectionType mConnectionType;
+	
+	/**
+	 * Initializes a new connection listener.
+	 * @param connectionType The type of the connection.
+	 */
+	protected ConnectionListener(ConnectionType connectionType) {
+		mConnectionType = connectionType;
+	}
 
 	/**
 	 * Closes the connection listener.
 	 * @throws IOException If an error occurs while closing the listener.
 	 */
-	public void close() throws IOException;
+	public abstract void close() throws IOException;
 	
 	/**
 	 * Initializes the connection listener. Required to accept connections
 	 * from other devices.
 	 * @throws IOException If an error occurs while initializing.
 	 */
-	public void initialize() throws IOException;
+	public abstract void initialize() throws IOException;
 	
 	/**
 	 * Accepts an incoming connection. Blocks until a connection is found
@@ -52,7 +66,15 @@ interface IConnectionListener extends Serializable {
 	 * @return The established peer-to-peer connection.
 	 * @see P2PConnection#ACCEPT_TIMEOUT
 	 * @throws IOException If an error occurs while accepting connection.
-	 * @throws InterruptedIOException If the timeout value is exceeded.
+	 * @throws InterruptedIOException If a timeout occurs.
 	 */
-	public P2PConnection acceptConnection() throws IOException, InterruptedIOException;
+	public abstract P2PConnection acceptConnection() throws IOException, InterruptedIOException;
+
+	/**
+	 * Gets the connection type.
+	 * @return The connection type.
+	 */
+	public ConnectionType getConnectionType() {
+		return mConnectionType;
+	}
 }

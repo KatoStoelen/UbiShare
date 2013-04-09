@@ -17,6 +17,8 @@ package org.societies.android.p2p;
 
 import java.net.InetAddress;
 
+import org.societies.android.p2p.P2PConnection.ConnectionType;
+
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -39,27 +41,16 @@ import android.util.SparseArray;
 public class P2PSyncManager {
 
 	/**
-	 * An enum of supported connection types.
+	 * An enum of P2P interface statuses.
 	 */
-	public enum ConnectionType {
-		/** Specifies Bluetooth as communication channel. */
-		BLUETOOTH,
-		
-		/** Specifies WiFi Direct as communication channel. */
-		WIFI_DIRECT
-	}
-	
-	/**
-	 * An enum of P2P connection statuses.
-	 */
-	public enum ConnectionStatus {
-		/** Indicates that the P2P connection is not supported. */
+	public enum P2PInterfaceStatus {
+		/** Indicates that the P2P is not supported. */
 		NOT_SUPPORTED,
 		
-		/** Indicates that the P2P connection is OFF. */
+		/** Indicates that the P2P interface is OFF. */
 		OFF,
 		
-		/** Indicates that the P2P connection is ON. */
+		/** Indicates that the P2P interface is ON. */
 		ON
 	}
 	
@@ -235,9 +226,10 @@ public class P2PSyncManager {
 	private void startSyncServer(ConnectionType connectionType) {
 		stopSync(true);
 		
-		IConnectionListener listener = null;
+		ConnectionListener listener = null;
 		if (connectionType == ConnectionType.WIFI_DIRECT)
-			listener = new WiFiDirectConnectionListener(P2PSyncServer.PORT);
+			listener = new WiFiDirectConnectionListener(
+					P2PConstants.WIFI_DIRECT_SERVER_PORT);
 		else if (connectionType == ConnectionType.BLUETOOTH)
 			listener = new BluetoothConnectionListener();
 		
@@ -260,6 +252,10 @@ public class P2PSyncManager {
 		intent.putExtra(
 				P2PSyncClientService.EXTRA_CONNECTION,
 				new WiFiDirectConnection(groupOwnerAddress));
+		intent.putExtra(
+				P2PSyncClientService.EXTRA_LISTENER,
+				new WiFiDirectConnectionListener(
+						P2PConstants.WIFI_DIRECT_CLIENT_PORT));
 		
 		mContext.startService(intent);
 	}

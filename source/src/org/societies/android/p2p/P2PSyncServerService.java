@@ -35,8 +35,8 @@ public class P2PSyncServerService extends Service {
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		IConnectionListener listener = 
-				(IConnectionListener) intent.getSerializableExtra(
+		ConnectionListener listener =
+				(ConnectionListener) intent.getSerializableExtra(
 						EXTRA_CONNECTION_LISTENER);
 		
 		if (mSyncServer == null) {
@@ -50,6 +50,25 @@ public class P2PSyncServerService extends Service {
 	@Override
 	public IBinder onBind(Intent intent) {
 		return mBinder;
+	}
+	
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		
+		stopSyncServer(true);
+	}
+	
+	/**
+	 * Stops the sync server.
+	 * @param awaitTermination Whether or not to block until the sync server
+	 * has terminated.
+	 */
+	public void stopSyncServer(boolean awaitTermination) {
+		try {
+			if (mSyncServer != null)
+				mSyncServer.stopServer(awaitTermination);
+		} catch (InterruptedException e) { /* Ignore */ }
 	}
 	
 	/**

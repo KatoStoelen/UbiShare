@@ -36,19 +36,16 @@ class P2PSyncServer extends Thread {
 	
 	public static final String TAG = "P2PSyncServer";
 	
-	/** The port number of the sync server. */
-	public static final int PORT = 8888;
-	
 	private boolean mStopping;
 	private Context mContext;
-	private IConnectionListener mListener;
+	private ConnectionListener mListener;
 	
 	/**
 	 * Initializes a new sync server.
 	 * @param context The context to use, cannot be <code>null</code>.
 	 * @param listener The connection listener, cannot be <code>null</code>.
 	 */
-	public P2PSyncServer(Context context, IConnectionListener listener) {
+	public P2PSyncServer(Context context, ConnectionListener listener) {
 		if (context == null)
 			throw new IllegalArgumentException("Context cannot be null");
 		if (listener == null)

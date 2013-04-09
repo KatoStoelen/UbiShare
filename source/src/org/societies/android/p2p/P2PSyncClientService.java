@@ -27,8 +27,10 @@ import android.os.IBinder;
  */
 public class P2PSyncClientService extends Service {
 	
-	/** Flag used to pass the connection to the server along with the intent. */
+	/** Name of the P2P connection extra. */
 	public static final String EXTRA_CONNECTION = "extra_connection";
+	/** Name of the connection listener extra. */
+	public static final String EXTRA_LISTENER = "extra_listener";
 	
 	private final IBinder mBinder = new SyncClientBinder();
 	private P2PSyncClient mSyncClient;
@@ -37,9 +39,11 @@ public class P2PSyncClientService extends Service {
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		P2PConnection connection =
 				(P2PConnection) intent.getSerializableExtra(EXTRA_CONNECTION);
+		ConnectionListener listener =
+				(ConnectionListener) intent.getSerializableExtra(EXTRA_LISTENER);
 		
 		if (mSyncClient == null) {
-			mSyncClient = new P2PSyncClient(connection, this);
+			mSyncClient = new P2PSyncClient(connection, listener, this);
 			mSyncClient.start();
 		}
 		
@@ -49,6 +53,25 @@ public class P2PSyncClientService extends Service {
 	@Override
 	public IBinder onBind(Intent intent) {
 		return mBinder;
+	}
+	
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		
+		stopSyncClient(true);
+	}
+	
+	/**
+	 * Stops the sync client.
+	 * @param awaitTermination Whether or not to block until sync client
+	 * has terminated.
+	 */
+	public void stopSyncClient(boolean awaitTermination) {
+		try {
+			if (mSyncClient != null)
+				mSyncClient.stopSyncClient(awaitTermination);
+		} catch (InterruptedException e) { /* Ignore */ }
 	}
 	
 	/**

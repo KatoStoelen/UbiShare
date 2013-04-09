@@ -18,35 +18,38 @@ package org.societies.android.p2p;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 
+import org.societies.android.p2p.P2PConnection.ConnectionType;
+
 /**
  * Bluetooth connection listener.
  * 
  * @author Kato
  */
-public class BluetoothConnectionListener implements IConnectionListener {
+public class BluetoothConnectionListener extends ConnectionListener {
 
 	/** Unique ID. */
 	private static final long serialVersionUID = 7877091133368946345L;
-
-	/* (non-Javadoc)
-	 * @see org.societies.android.p2p.IConnectionListener#close()
+	
+	/**
+	 * Initializes a new Bluetooth connection listener.
 	 */
+	protected BluetoothConnectionListener() {
+		super(ConnectionType.BLUETOOTH);
+	}
+
+	@Override
 	public void close() throws IOException {
 		// TODO Auto-generated method stub
 
 	}
 
-	/* (non-Javadoc)
-	 * @see org.societies.android.p2p.IConnectionListener#initialize()
-	 */
+	@Override
 	public void initialize() throws IOException {
 		// TODO Auto-generated method stub
 
 	}
 
-	/* (non-Javadoc)
-	 * @see org.societies.android.p2p.IConnectionListener#acceptConnection()
-	 */
+	@Override
 	public P2PConnection acceptConnection() throws IOException,
 			InterruptedIOException {
 		return null;

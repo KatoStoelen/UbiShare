@@ -55,6 +55,8 @@ class WiFiDirectConnection extends P2PConnection {
 	 * @throws IOException If an error occurs while initializing.
 	 */
 	public WiFiDirectConnection(Socket socket) throws IOException {
+		super(ConnectionType.WIFI_DIRECT);
+		
 		initialize(socket);
 	}
 	
@@ -65,6 +67,8 @@ class WiFiDirectConnection extends P2PConnection {
 	 * @param remoteAddress The address of the remote host.
 	 */
 	public WiFiDirectConnection(InetAddress remoteAddress) {
+		super(ConnectionType.WIFI_DIRECT);
+		
 		mRemoteAddress = remoteAddress;
 	}
 	
@@ -150,7 +154,8 @@ class WiFiDirectConnection extends P2PConnection {
 		
 		Socket socket = new Socket();
 		socket.connect(
-				new InetSocketAddress(mRemoteAddress, P2PSyncServer.PORT),
+				new InetSocketAddress(
+						mRemoteAddress, P2PConstants.WIFI_DIRECT_SERVER_PORT),
 				CONNECTION_TIMEOUT);
 		
 		initialize(socket);

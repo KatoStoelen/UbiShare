@@ -20,12 +20,14 @@ import java.io.InterruptedIOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import org.societies.android.p2p.P2PConnection.ConnectionType;
+
 /**
  * Connection listener for WiFi Direct.
  * 
  * @author Kato
  */
-public class WiFiDirectConnectionListener implements IConnectionListener {
+public class WiFiDirectConnectionListener extends ConnectionListener {
 	
 	/** Unique ID. */
 	private static final long serialVersionUID = 7350321224017878410L;
@@ -39,21 +41,19 @@ public class WiFiDirectConnectionListener implements IConnectionListener {
 	 * @param port The port number to listen on.
 	 */
 	public WiFiDirectConnectionListener(int port) {
+		super(ConnectionType.WIFI_DIRECT);
+		
 		mPort = port;
 		mIsInitialized = false;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.societies.android.p2p.IConnectionListener#close()
-	 */
+	@Override
 	public void close() throws IOException {
 		if (mListener != null)
 			mListener.close();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.societies.android.p2p.IConnectionListener#initialize()
-	 */
+	@Override
 	public void initialize() throws IOException {
 		mListener = new ServerSocket(mPort);
 		mListener.setSoTimeout(ACCEPT_TIMEOUT);
@@ -61,9 +61,7 @@ public class WiFiDirectConnectionListener implements IConnectionListener {
 		mIsInitialized = true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.societies.android.p2p.IConnectionListener#acceptConnection()
-	 */
+	@Override
 	public P2PConnection acceptConnection() throws IOException, InterruptedIOException {
 		if (!mIsInitialized)
 			throw new IllegalStateException("Listener is not initialized");

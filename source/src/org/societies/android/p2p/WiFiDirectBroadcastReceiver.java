@@ -18,8 +18,8 @@ package org.societies.android.p2p;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.societies.android.p2p.P2PSyncManager.ConnectionStatus;
-import org.societies.android.p2p.P2PSyncManager.ConnectionType;
+import org.societies.android.p2p.P2PConnection.ConnectionType;
+import org.societies.android.p2p.P2PSyncManager.P2PInterfaceStatus;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -70,11 +70,11 @@ class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
 			int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
 			
 	        if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED)
-	        	mP2pListener.onP2pConnectionStatusChange(
-	        			ConnectionStatus.ON, ConnectionType.WIFI_DIRECT);
+	        	mP2pListener.onP2pInterfaceStatusChange(
+	        			P2PInterfaceStatus.ON, ConnectionType.WIFI_DIRECT);
 	        else
-	        	mP2pListener.onP2pConnectionStatusChange(
-	        			ConnectionStatus.OFF, ConnectionType.WIFI_DIRECT);
+	        	mP2pListener.onP2pInterfaceStatusChange(
+	        			P2PInterfaceStatus.OFF, ConnectionType.WIFI_DIRECT);
 		} else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
 			if (mManager != null)
 				mManager.requestPeers(mChannel, mPeerListListener);

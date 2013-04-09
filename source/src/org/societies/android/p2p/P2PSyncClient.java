@@ -18,6 +18,8 @@ package org.societies.android.p2p;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 
+import org.societies.android.p2p.entity.Response;
+
 import android.content.Context;
 import android.util.Log;
 
@@ -30,46 +32,51 @@ class P2PSyncClient extends Thread {
 	
 	public static final String TAG = "P2PSyncClient";
 	
-	private Context mContext;
-	private P2PConnection mConnection;
+	private final Context mContext;
+	private final P2PConnection mConnection;
+	private final ConnectionListener mListener;
+	private final UpdateReceiver mReceiver;
 	private boolean mStopping;
-	private boolean mSyncNow;
 	
 	/**
 	 * Initiates a new sync client.
 	 * @param connection The connection to the server.
+	 * @param listener The connection listener used for receiving updates
+	 * from server.
 	 * @param context The context to use.
 	 */
-	public P2PSyncClient(P2PConnection connection, Context context) {
+	public P2PSyncClient(
+			P2PConnection connection,
+			ConnectionListener listener,
+			Context context) {
 		mConnection = connection;
 		mContext = context;
+		mListener = listener;
 		
+		mReceiver = new UpdateReceiver();
 		mStopping = false;
-		mSyncNow = false;
 	}
 	
 	@Override
 	public void run() {
+		mReceiver.start();
+		
+		// TODO: FIGURE OUT WHETHER OR NOT TO REGISTER A CONTENT OBSERVER
+		
+		// TODO: ONLY SEND IF ANYTHING IS UPDATED.
+		// TODO: SERVER IS TO PUSH UPDATES TO CLIENT.
+		
+		waitForReceiverToTerminate();
+	}
+
+	/**
+	 * Waits until the update receiver has terminated.
+	 */
+	private void waitForReceiverToTerminate() {
 		try {
-			while (!mStopping) {
-				mSyncNow = false;
-				
-				try {
-					if (!mConnection.connect()) {
-						throw new IOException("Connection not established");
-					} else {
-						// TODO: ONLY SEND IF ANYTHING IS UPDATED.
-						// TODO: SERVER IS TO PUSH UPDATES TO CLIENT.
-					}
-				} finally {
-					mConnection.close();
-				}
-			}
-		} catch (InterruptedIOException e) {
-			Log.e(TAG, "Failed to connect to server: timeout");
-		} catch (IOException e) {
-			Log.e(TAG, e.getMessage(), e);
-		}
+			if (mReceiver.isAlive())
+				mReceiver.join();
+		} catch (InterruptedException e) { /* Ignore */ }
 	}
 	
 	/**
@@ -85,5 +92,63 @@ class P2PSyncClient extends Thread {
 		
 		if (awaitTermination && isAlive())
 			join();
+	}
+	
+	/**
+	 * Thread used to receive updates pushed from the server.
+	 */
+	private class UpdateReceiver extends Thread {
+		@Override
+		public void run() {
+			try {
+				while (!mStopping) {
+					P2PConnection connection = null;
+					try {
+						connection = mListener.acceptConnection();
+						
+						handleResponse(connection.readResponse());
+					} catch (InterruptedIOException e) {
+						/* Ignore */
+					} finally {
+						closeConnection(connection);
+					}
+				}
+			} catch (IOException e) {
+				Log.e(TAG, e.getMessage(), e);
+			} finally {
+				closeListener();
+			}
+		}
+		
+		/**
+		 * Handles the updates pushed form the server.
+		 * @param response The received response entity.
+		 */
+		private void handleResponse(Response response) {
+			// TODO IMPLEMENT
+		}
+
+		/**
+		 * Closes the P2P connection listener.
+		 */
+		private void closeListener() {
+			if (mListener != null) {
+				try {
+					mListener.close();
+				} catch (IOException e) { /* Ignore */ }
+			}
+		}
+
+		/**
+		 * Closes the specified P2P connection.
+		 * @param connection The P2P connection to close.
+		 */
+		private void closeConnection(P2PConnection connection) {
+			if (connection != null) {
+				try {
+					connection.close();
+				} catch (IOException e) { /* Ignore */ }
+			}
+		}
 	}
 }

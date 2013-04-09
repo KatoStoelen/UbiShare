@@ -17,7 +17,7 @@ package org.societies.android.p2p;
 
 import java.util.Locale;
 
-import org.societies.android.p2p.P2PSyncManager.ConnectionType;
+import org.societies.android.p2p.P2PConnection.ConnectionType;
 
 /**
  * A base class of P2P devices. This class is used to provide a generalization

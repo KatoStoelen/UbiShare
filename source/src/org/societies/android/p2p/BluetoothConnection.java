@@ -28,6 +28,16 @@ import org.societies.android.p2p.entity.Response;
  */
 class BluetoothConnection extends P2PConnection {
 
+	/** Unique ID. */
+	private static final long serialVersionUID = -6960990814184751910L;
+
+	/**
+	 * Initializes a new Bluetooth connection.
+	 */
+	public BluetoothConnection() {
+		super(ConnectionType.BLUETOOTH);
+	}
+
 	@Override
 	protected String readToEnd() throws IOException, InterruptedIOException {
 		// TODO Auto-generated method stub
