@@ -26,7 +26,7 @@ import org.societies.android.p2p.P2PConnection.ConnectionType;
  * 
  * @author Kato
  */
-abstract class ConnectionListener implements Serializable {
+abstract class P2PConnectionListener implements Serializable {
 	
 	/** Unique ID. */
 	private static final long serialVersionUID = -5562556424047117337L;
@@ -35,7 +35,7 @@ abstract class ConnectionListener implements Serializable {
 	 * out and a <code>InterruptedIOException</code> is thrown.
 	 * @see InterruptedIOException
 	 */
-	public static final int ACCEPT_TIMEOUT = 200;
+	public static final int ACCEPT_TIMEOUT = 300;
 	
 	private final ConnectionType mConnectionType;
 	
@@ -43,7 +43,7 @@ abstract class ConnectionListener implements Serializable {
 	 * Initializes a new connection listener.
 	 * @param connectionType The type of the connection.
 	 */
-	protected ConnectionListener(ConnectionType connectionType) {
+	protected P2PConnectionListener(ConnectionType connectionType) {
 		mConnectionType = connectionType;
 	}
 
@@ -64,7 +64,7 @@ abstract class ConnectionListener implements Serializable {
 	 * Accepts an incoming connection. Blocks until a connection is found
 	 * or the timeout value is exceeded.
 	 * @return The established peer-to-peer connection.
-	 * @see P2PConnection#ACCEPT_TIMEOUT
+	 * @see P2PConnectionListener#ACCEPT_TIMEOUT
 	 * @throws IOException If an error occurs while accepting connection.
 	 * @throws InterruptedIOException If a timeout occurs.
 	 */

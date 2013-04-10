@@ -177,6 +177,29 @@ public abstract class Entity {
 	}
 	
 	/**
+	 * Gets the updated entities.
+	 * @param resolver The content resolver.
+	 * @return A list of the updated entities.
+	 * @throws Exception If an error occurs while fetching entities.
+	 */
+	public static List<Entity> getUpdatedEntities(
+			ContentResolver resolver) throws Exception {
+		List<Entity> updatedEntities = new ArrayList<Entity>();
+		
+		updatedEntities.addAll(Community.getUpdatedCommunities(resolver));
+		updatedEntities.addAll(CommunityActivity.getUpdatedCommunityActivities(resolver));
+		updatedEntities.addAll(Membership.getUpdatedMemberships(resolver));
+		updatedEntities.addAll(Person.getUpdatedPeople(resolver));
+		updatedEntities.addAll(PersonActivity.getUpdatedPersonActivities(resolver));
+		updatedEntities.addAll(Relationship.getUpdatedRelationships(resolver));
+		updatedEntities.addAll(Service.getUpdatedServices(resolver));
+		updatedEntities.addAll(ServiceActivity.getUpdatedServiceActivities(resolver));
+		updatedEntities.addAll(Sharing.getUpdatedSharings(resolver));
+		
+		return updatedEntities;
+	}
+	
+	/**
 	 * Prepares the selection clause of a query.
 	 * @param selection The selection.
 	 * @return The prepared selection.

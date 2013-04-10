@@ -58,7 +58,7 @@ public class Service extends Entity {
 	 */
 	public static List<Service> getUpdatedServices(
 			ContentResolver resolver) throws Exception {
-		return Entity.getEntities(
+		List<Service> updatedServices = Entity.getEntities(
 				Service.class,
 				resolver,
 				CONTENT_URI,
@@ -66,6 +66,11 @@ public class Service extends Entity {
 				DIRTY + " = 1",
 				null,
 				null);
+		
+		for (Service service : updatedServices)
+			service.fetchGlobalIds(resolver);
+		
+		return updatedServices;
 	}
 	
 	@Override

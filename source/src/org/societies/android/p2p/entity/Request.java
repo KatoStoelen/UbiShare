@@ -37,15 +37,11 @@ public class Request {
 		/** Indicates a request to notify server of a client's presence. */
 		HANDSHAKE,
 		
-		/** Indicates a request to fetch all data. */
-		FETCH_ALL,
-		
-		/** Indicates a request to fetch updated data. */
-		FETCH_UPDATES
+		/** Indicates a request containing updates from the client. */
+		UPDATE
 	}
 	
 	private RequestType mType;
-	private long mLastRequest;
 	private Collection<Entity> mUpdatedEntities = new ArrayList<Entity>();
 	
 	/**
@@ -56,12 +52,10 @@ public class Request {
 	/**
 	 * Initializes a new request of the specified type.
 	 * @param type The type of request.
-	 * @param lastRequest The timestamp of the last request (UNIX time
 	 * in seconds).
 	 */
-	public Request(RequestType type, long lastRequest) {
+	public Request(RequestType type) {
 		setType(type);
-		setLastRequestTime(lastRequest);
 	}
 	
 	/**
@@ -103,23 +97,6 @@ public class Request {
 	 */
 	public void setType(RequestType type) {
 		this.mType = type;
-	}
-
-	/**
-	 * Gets the timestamp of the last request (UNIX time in seconds).
-	 * @return The timestamp of the last request.
-	 */
-	public long getLastRequestTime() {
-		return mLastRequest;
-	}
-
-	/**
-	 * Sets the timestamp of the last request.
-	 * @param lastRequest The timestamp of the last request (UNIX time
-	 * in seconds).
-	 */
-	public void setLastRequestTime(long lastRequest) {
-		this.mLastRequest = lastRequest;
 	}
 
 	/**

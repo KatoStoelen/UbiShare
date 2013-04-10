@@ -226,7 +226,7 @@ public class P2PSyncManager {
 	private void startSyncServer(ConnectionType connectionType) {
 		stopSync(true);
 		
-		ConnectionListener listener = null;
+		P2PConnectionListener listener = null;
 		if (connectionType == ConnectionType.WIFI_DIRECT)
 			listener = new WiFiDirectConnectionListener(
 					P2PConstants.WIFI_DIRECT_SERVER_PORT);

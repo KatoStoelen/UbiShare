@@ -25,7 +25,7 @@ import org.societies.android.p2p.P2PConnection.ConnectionType;
  * 
  * @author Kato
  */
-public class BluetoothConnectionListener extends ConnectionListener {
+public class BluetoothConnectionListener extends P2PConnectionListener {
 
 	/** Unique ID. */
 	private static final long serialVersionUID = 7877091133368946345L;

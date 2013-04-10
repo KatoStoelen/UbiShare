@@ -43,7 +43,6 @@ public class RequestTypeAdapter implements
 	JsonDeserializer<Request>, JsonSerializer<Request> {
 	
 	private static final String PROP_TYPE = "type";
-	private static final String PROP_LAST_REQUEST = "last_request";
 	private static final String PROP_UPDATED_ENTITIES = "updated_entities";
 
 	/* (non-Javadoc)
@@ -62,7 +61,6 @@ public class RequestTypeAdapter implements
 		
 		JsonObject jsonObject = new JsonObject();
 		jsonObject.addProperty(PROP_TYPE, request.getType().name());
-		jsonObject.addProperty(PROP_LAST_REQUEST, request.getLastRequestTime());
 		jsonObject.addProperty(PROP_UPDATED_ENTITIES, serializedEntities);
 		
 		return jsonObject;
@@ -77,7 +75,6 @@ public class RequestTypeAdapter implements
 		JsonObject jsonObject = json.getAsJsonObject();
 		
 		JsonPrimitive typePrim = (JsonPrimitive) jsonObject.get(PROP_TYPE);
-		JsonPrimitive lastRequestPrim = (JsonPrimitive) jsonObject.get(PROP_LAST_REQUEST);
 		JsonPrimitive updatedEntitiesPrim = (JsonPrimitive) jsonObject.get(PROP_UPDATED_ENTITIES);
 		
 		Gson serializer = new GsonBuilder()
@@ -91,7 +88,6 @@ public class RequestTypeAdapter implements
 		
 		Request request = new Request();
 		request.setType(RequestType.valueOf(typePrim.getAsString()));
-		request.setLastRequestTime(lastRequestPrim.getAsLong());
 		request.setUpdatedEntities(updatedEntities);
 		
 		return request;

@@ -27,7 +27,7 @@ import org.societies.android.p2p.P2PConnection.ConnectionType;
  * 
  * @author Kato
  */
-public class WiFiDirectConnectionListener extends ConnectionListener {
+public class WiFiDirectConnectionListener extends P2PConnectionListener {
 	
 	/** Unique ID. */
 	private static final long serialVersionUID = 7350321224017878410L;

@@ -31,5 +31,5 @@ public interface P2PConstants {
 	/** The name of the Bluetooth service. */
 	public static final String BLUETOOTH_SERVICE_NAME = "UbiShareP2P";
 	/** The UUID of the Bluetooth service. */
-	public static final UUID BLUETOOTH_SERVICE_UUID = UUID.fromString("org.societies.android.platform.p2p");
+	public static final UUID BLUETOOTH_SERVICE_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 }

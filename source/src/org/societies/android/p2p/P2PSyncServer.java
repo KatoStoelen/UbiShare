@@ -36,46 +36,26 @@ class P2PSyncServer extends Thread {
 	
 	public static final String TAG = "P2PSyncServer";
 	
+	private final P2PConnectionListener mListener;
+	private final Context mContext;
 	private boolean mStopping;
-	private Context mContext;
-	private ConnectionListener mListener;
 	
 	/**
 	 * Initializes a new sync server.
 	 * @param context The context to use, cannot be <code>null</code>.
 	 * @param listener The connection listener, cannot be <code>null</code>.
 	 */
-	public P2PSyncServer(Context context, ConnectionListener listener) {
-		if (context == null)
-			throw new IllegalArgumentException("Context cannot be null");
-		if (listener == null)
-			throw new IllegalArgumentException("Connection listener cannot be null");
-		
+	public P2PSyncServer(Context context, P2PConnectionListener listener) {
 		mContext = context;
 		mListener = listener;
+		
 		mStopping = false;
 	}
 
 	@Override
 	public void run() {
-		try {
-			mListener.initialize();
-			
-			while (!mStopping) {
-				try {
-					P2PConnection connection = mListener.acceptConnection();
-					
-					if (connection != null)
-						new ClientHandler(connection, mContext).start();
-				} catch(InterruptedIOException e) { /* Ignore */ }
-			}
-		} catch (IOException e) {
-			Log.e(TAG, e.getMessage(), e);
-		} finally {
-			try {
-				mListener.close();
-			} catch (IOException e) { /* Ignore */ }
-		}
+		// TODO: Handle HANDSHAKEs
+		// TODO: Create broadcaster thread
 	}
 	
 	/**
@@ -90,95 +70,5 @@ class P2PSyncServer extends Thread {
 		
 		if (awaitTermination && isAlive())
 			join();
-	}
-	
-	/**
-	 * A worker thread that handles requests from clients.
-	 * 
-	 * @author Kato
-	 */
-	private class ClientHandler extends Thread {
-		
-		public static final String TAG = P2PSyncServer.TAG + ":ClientHandler";
-		
-		private P2PConnection mConnection;
-		private Context mContext;
-		
-		/**
-		 * Initializes a new client handler.
-		 * @param connection The peer-to-peer connection. Cannot
-		 * be <code>null</code>.
-		 * @param context The context to use.
-		 */
-		public ClientHandler(P2PConnection connection, Context context) {
-			if (connection == null)
-				throw new IllegalArgumentException("Connection is null");
-			
-			mConnection = connection;
-			mContext = context;
-		}
-		
-		@Override
-		public void run() {
-			try {
-				handleRequest(mConnection.readRequest());
-			} catch (InterruptedIOException iioe) {
-				Log.e(TAG, "Timed out while reading request");
-			} catch (IOException e) {
-				Log.e(TAG, e.getMessage(), e);
-			} finally {
-				try {
-					mConnection.close();
-				} catch (IOException e) { /* Ignore */ }
-			}
-		}
-		
-		/**
-		 * Handles the received request.
-		 * @param serializedData The serialized data received.
-		 */
-		private void handleRequest(Request request) throws IOException {
-			if (request == null) {
-				Log.e(TAG, "Received request: null");
-				return;
-			}
-			
-			//sendReponse(request.getLastRequestTime(), request.getType());
-			
-			Log.i(TAG, "Request Type: " + request.getType());
-			Log.i(TAG, "Last Request Time: " + request.getLastRequestTime());
-			Log.i(TAG, "# Entities: " + request.getUpdatedEntities().size());
-			
-			for (Entity entity : request.getUpdatedEntities()) {
-				entity.fetchLocalId(mContext.getContentResolver());
-				
-				/*
-				if (entity.getId() == Entity.ENTITY_DEFAULT_ID)
-					entity.insert(mContext.getContentResolver());
-				else
-					entity.update(mContext.getContentResolver());
-				*/
-				
-				Log.i(TAG, entity.serialize());
-			}
-		}
-		
-		/**
-		 * Sends the response to the client.
-		 * @param lastRequest The timestamp of the last request (UNIX time in
-		 * seconds).
-		 * @param requestType The type of the request.
-		 * @throws IOException If an error occurs while sending response.
-		 */
-		private void sendReponse(
-				long lastRequest, RequestType requestType) throws IOException {
-			Response response = new Response();
-			if (requestType == RequestType.FETCH_ALL)
-				; // TODO: response.setEntities(Entity.getAllEntities());
-			else if (requestType == RequestType.FETCH_UPDATES)
-				; // TODO: response.setEntities(Entity.getUpdatedEntities(lastRequest));
-			
-			mConnection.write(response);
-		}
 	}
 }

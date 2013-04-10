@@ -27,7 +27,7 @@ import org.societies.android.p2p.P2PConnection.ConnectionType;
  */
 public abstract class P2PDevice {
 
-	private ConnectionType mConnectionType;
+	private final ConnectionType mConnectionType;
 	
 	/**
 	 * Initiates a new P2P device.

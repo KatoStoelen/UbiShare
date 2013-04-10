@@ -17,9 +17,14 @@ package org.societies.android.p2p;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.util.Collection;
 
+import org.societies.android.p2p.entity.Request;
+import org.societies.android.p2p.entity.Request.RequestType;
 import org.societies.android.p2p.entity.Response;
+import org.societies.android.platform.entity.Entity;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.util.Log;
 
@@ -32,26 +37,29 @@ class P2PSyncClient extends Thread {
 	
 	public static final String TAG = "P2PSyncClient";
 	
+	/** The interval (in milliseconds) between each poll for updated records. */
+	private static final int POLL_INTERVAL = 5000;
+	
 	private final Context mContext;
 	private final P2PConnection mConnection;
-	private final ConnectionListener mListener;
+	private final P2PConnectionListener mListener;
 	private final UpdateReceiver mReceiver;
 	private boolean mStopping;
 	
 	/**
 	 * Initiates a new sync client.
-	 * @param connection The connection to the server.
+	 * @param connection The connection to the server, cannot be <code>null</code>.
 	 * @param listener The connection listener used for receiving updates
-	 * from server.
-	 * @param context The context to use.
+	 * from server, cannot be <code>null</code>.
+	 * @param context The context to use, cannot be <code>null</code>.
 	 */
 	public P2PSyncClient(
 			P2PConnection connection,
-			ConnectionListener listener,
+			P2PConnectionListener listener,
 			Context context) {
 		mConnection = connection;
-		mContext = context;
 		mListener = listener;
+		mContext = context;
 		
 		mReceiver = new UpdateReceiver();
 		mStopping = false;
@@ -59,14 +67,54 @@ class P2PSyncClient extends Thread {
 	
 	@Override
 	public void run() {
+		Log.i(TAG, "SyncClient started");
+		
 		mReceiver.start();
 		
-		// TODO: FIGURE OUT WHETHER OR NOT TO REGISTER A CONTENT OBSERVER
-		
-		// TODO: ONLY SEND IF ANYTHING IS UPDATED.
-		// TODO: SERVER IS TO PUSH UPDATES TO CLIENT.
+		try {
+			while (!mStopping) {
+				Collection<Entity> updatedEntities = Entity.getUpdatedEntities(
+						mContext.getContentResolver());
+				
+				sendEntities(updatedEntities);
+				
+				Thread.sleep(POLL_INTERVAL);
+			}
+		} catch (IOException e) {
+			Log.e(TAG, e.getMessage(), e);
+		} catch (InterruptedException e) {
+			if (!mStopping)
+				Log.e(TAG, "Thread was interrupted while sleeping");
+		} catch (Exception e) {
+			Log.e(TAG, "Error while fetching entities", e);
+		}
 		
 		waitForReceiverToTerminate();
+		
+		Log.i(TAG, "SyncClient terminated");
+	}
+
+	/**
+	 * Sends the specified entities to the server.
+	 * @param entities The entities to send.
+	 * @throws IOException If an error occurs while sending.
+	 */
+	private void sendEntities(
+			Collection<Entity> entities) throws IOException {
+		if (entities.size() > 0) {
+			Log.i(TAG, "Sending entities: " + entities.size());
+			
+			mConnection.connect();
+			
+			Request request = new Request(RequestType.UPDATE);
+			request.setUpdatedEntities(entities);
+			
+			try {
+				mConnection.write(request);
+			} finally {
+				mConnection.close();
+			}
+		}
 	}
 
 	/**
@@ -90,8 +138,12 @@ class P2PSyncClient extends Thread {
 			boolean awaitTermination) throws InterruptedException {
 		mStopping = true;
 		
-		if (awaitTermination && isAlive())
+		if (awaitTermination && isAlive()) {
+			if (getState() == State.TIMED_WAITING)
+				interrupt();
+			
 			join();
+		}
 	}
 	
 	/**
@@ -100,6 +152,8 @@ class P2PSyncClient extends Thread {
 	private class UpdateReceiver extends Thread {
 		@Override
 		public void run() {
+			Log.i(TAG, "UpdateReceiver started");
+			
 			try {
 				while (!mStopping) {
 					P2PConnection connection = null;
@@ -118,6 +172,8 @@ class P2PSyncClient extends Thread {
 			} finally {
 				closeListener();
 			}
+			
+			Log.i(TAG, "UpdateReceiver terminated");
 		}
 		
 		/**
@@ -125,7 +181,25 @@ class P2PSyncClient extends Thread {
 		 * @param response The received response entity.
 		 */
 		private void handleResponse(Response response) {
-			// TODO IMPLEMENT
+			if (response == null) {
+				Log.i(TAG, "Received response: null");
+				return;
+			}
+			
+			Log.i(TAG, "Entities in response: " + response.getEntities().size());
+			
+			ContentResolver resolver = mContext.getContentResolver();
+			
+			for (Entity entity : response.getEntities()) {
+				entity.fetchLocalId(resolver);
+				
+				if (entity.getId() == Entity.ENTITY_DEFAULT_ID)
+					entity.insert(resolver);
+				else
+					entity.update(resolver);
+				
+				// TODO: Figure out DELETING of entities
+			}
 		}
 
 		/**

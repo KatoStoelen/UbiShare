@@ -54,7 +54,7 @@ public class ServiceActivity extends Entity {
 	 */
 	public static List<ServiceActivity> getUpdatedServiceActivities(
 			ContentResolver resolver) throws Exception {
-		return Entity.getEntities(
+		List<ServiceActivity> updatedActivities = Entity.getEntities(
 				ServiceActivity.class,
 				resolver,
 				CONTENT_URI,
@@ -62,6 +62,11 @@ public class ServiceActivity extends Entity {
 				DIRTY + " = 1",
 				null,
 				null);
+		
+		for (ServiceActivity activity : updatedActivities)
+			activity.fetchGlobalIds(resolver);
+		
+		return updatedActivities;
 	}
 	
 	@Override

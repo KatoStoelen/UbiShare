@@ -39,8 +39,8 @@ public class P2PSyncClientService extends Service {
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		P2PConnection connection =
 				(P2PConnection) intent.getSerializableExtra(EXTRA_CONNECTION);
-		ConnectionListener listener =
-				(ConnectionListener) intent.getSerializableExtra(EXTRA_LISTENER);
+		P2PConnectionListener listener =
+				(P2PConnectionListener) intent.getSerializableExtra(EXTRA_LISTENER);
 		
 		if (mSyncClient == null) {
 			mSyncClient = new P2PSyncClient(connection, listener, this);

@@ -35,8 +35,8 @@ public class P2PSyncServerService extends Service {
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		ConnectionListener listener =
-				(ConnectionListener) intent.getSerializableExtra(
+		P2PConnectionListener listener =
+				(P2PConnectionListener) intent.getSerializableExtra(
 						EXTRA_CONNECTION_LISTENER);
 		
 		if (mSyncServer == null) {

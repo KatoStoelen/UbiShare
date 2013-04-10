@@ -53,7 +53,7 @@ public class Relationship extends Entity {
 	 */
 	public static List<Relationship> getUpdatedRelationships(
 			ContentResolver resolver) throws Exception {
-		return Entity.getEntities(
+		List<Relationship> updatedRelationships = Entity.getEntities(
 				Relationship.class,
 				resolver,
 				CONTENT_URI,
@@ -61,6 +61,11 @@ public class Relationship extends Entity {
 				DIRTY + " = 1",
 				null,
 				null);
+		
+		for (Relationship relationship : updatedRelationships)
+			relationship.fetchGlobalIds(resolver);
+		
+		return updatedRelationships;
 	}
 
 	@Override

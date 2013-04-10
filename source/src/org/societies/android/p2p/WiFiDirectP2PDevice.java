@@ -26,7 +26,7 @@ import android.net.wifi.p2p.WifiP2pDevice;
  */
 public class WiFiDirectP2PDevice extends P2PDevice {
 
-	private WifiP2pDevice mDevice;
+	private final WifiP2pDevice mDevice;
 	
 	/**
 	 * Initializes a new WiFi Direct device.
