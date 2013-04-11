@@ -17,6 +17,11 @@ package org.societies.android.p2p;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 import org.societies.android.p2p.entity.Request;
 import org.societies.android.p2p.entity.Request.RequestType;
@@ -38,6 +43,7 @@ class P2PSyncServer extends Thread {
 	
 	private final P2PConnectionListener mListener;
 	private final Context mContext;
+	private List<String> mClientIPs;
 	private boolean mStopping;
 	
 	/**
@@ -49,6 +55,7 @@ class P2PSyncServer extends Thread {
 		mContext = context;
 		mListener = listener;
 		
+		mClientIPs = new ArrayList<String>();
 		mStopping = false;
 	}
 
@@ -70,5 +77,12 @@ class P2PSyncServer extends Thread {
 		
 		if (awaitTermination && isAlive())
 			join();
+	}
+	
+	/**
+	 * Thread responsible for sending updates to the clients.
+	 */
+	private class ClientHandler extends Thread {
+		// TODO: create Peer entity. UUID, IP, PORT, LAST_RECEIVED_UPDATE_TIME ++
 	}
 }

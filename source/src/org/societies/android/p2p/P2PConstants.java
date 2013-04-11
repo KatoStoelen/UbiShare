@@ -22,7 +22,7 @@ import java.util.UUID;
  * 
  * @author Kato
  */
-public interface P2PConstants {
+interface P2PConstants {
 	/** The port number of the WiFi Direct sync server. */
 	public static final int WIFI_DIRECT_SERVER_PORT = 8888;
 	/** The port number of the WiFi Direct sync client. */

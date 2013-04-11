@@ -25,7 +25,7 @@ import android.os.IBinder;
  * 
  * @author Kato
  */
-public class P2PSyncClientService extends Service {
+class P2PSyncClientService extends Service {
 	
 	/** Name of the P2P connection extra. */
 	public static final String EXTRA_CONNECTION = "extra_connection";

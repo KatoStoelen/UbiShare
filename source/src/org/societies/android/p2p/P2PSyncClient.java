@@ -198,7 +198,7 @@ class P2PSyncClient extends Thread {
 				else
 					entity.update(resolver);
 				
-				// TODO: Figure out DELETING of entities
+				// TODO: Figure out DELETION of entities
 			}
 		}
 
