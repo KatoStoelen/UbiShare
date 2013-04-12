@@ -17,7 +17,6 @@ package org.societies.android.p2p;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -43,7 +42,7 @@ class P2PSyncServer extends Thread {
 	
 	private final P2PConnectionListener mListener;
 	private final Context mContext;
-	private List<String> mClientIPs;
+	private PeerList mPeers;
 	private boolean mStopping;
 	
 	/**
@@ -55,7 +54,7 @@ class P2PSyncServer extends Thread {
 		mContext = context;
 		mListener = listener;
 		
-		mClientIPs = new ArrayList<String>();
+		mPeers = new PeerList();
 		mStopping = false;
 	}
 

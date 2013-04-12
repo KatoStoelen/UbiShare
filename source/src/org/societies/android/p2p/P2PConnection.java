@@ -88,6 +88,7 @@ abstract class P2PConnection implements Serializable {
 	 * @return Whether or not the connection was successfully made.
 	 * @throws IOException If an error occurs while connecting.
 	 * @throws InterruptedIOException If the connection attempt times out.
+	 * @see P2PConnection#CONNECTION_TIMEOUT
 	 */
 	public abstract boolean connect() throws IOException, InterruptedIOException;
 	

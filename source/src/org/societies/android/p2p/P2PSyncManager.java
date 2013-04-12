@@ -16,6 +16,7 @@
 package org.societies.android.p2p;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 
 import org.societies.android.p2p.P2PConnection.ConnectionType;
 
@@ -245,7 +246,7 @@ public class P2PSyncManager {
 	 * Starts the sync client using WiFi Direct.
 	 * @param groupOwnerAddress The address of the group owner.
 	 */
-	private void startWifiDirectSyncClient(InetAddress groupOwnerAddress) {
+	private void startWifiDirectSyncClient(InetSocketAddress groupOwnerAddress) {
 		stopSync(true);
 		
 		Intent intent = new Intent(mContext, P2PSyncClientService.class);
@@ -278,7 +279,10 @@ public class P2PSyncManager {
 						SyncRole.SERVER, ConnectionType.WIFI_DIRECT);
 			} else if (info.groupFormed) {
 				InetAddress groupOwnerAddress = info.groupOwnerAddress;
-				startWifiDirectSyncClient(groupOwnerAddress);
+				InetSocketAddress socketAddress = new InetSocketAddress(
+						groupOwnerAddress, P2PConstants.WIFI_DIRECT_SERVER_PORT);
+				
+				startWifiDirectSyncClient(socketAddress);
 				
 				mP2pListener.onSuccessfulConnection(
 						SyncRole.CLIENT, ConnectionType.WIFI_DIRECT);

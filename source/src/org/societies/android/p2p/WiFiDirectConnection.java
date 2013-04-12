@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
 import java.io.OutputStreamWriter;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
@@ -41,7 +40,7 @@ class WiFiDirectConnection extends P2PConnection {
 	public static final String TAG = "WiFiDirectConnection";
 
 	transient private Socket mSocket;
-	private InetAddress mRemoteAddress;
+	private InetSocketAddress mRemoteAddress;
 	
 	transient private BufferedReader mReader;
 	transient private BufferedWriter mWriter;
@@ -66,7 +65,7 @@ class WiFiDirectConnection extends P2PConnection {
 	 * connection.
 	 * @param remoteAddress The address of the remote host.
 	 */
-	public WiFiDirectConnection(InetAddress remoteAddress) {
+	public WiFiDirectConnection(InetSocketAddress remoteAddress) {
 		super(ConnectionType.WIFI_DIRECT);
 		
 		mRemoteAddress = remoteAddress;
@@ -153,10 +152,7 @@ class WiFiDirectConnection extends P2PConnection {
 			close();
 		
 		Socket socket = new Socket();
-		socket.connect(
-				new InetSocketAddress(
-						mRemoteAddress, P2PConstants.WIFI_DIRECT_SERVER_PORT),
-				CONNECTION_TIMEOUT);
+		socket.connect(mRemoteAddress, CONNECTION_TIMEOUT);
 		
 		initialize(socket);
 		
