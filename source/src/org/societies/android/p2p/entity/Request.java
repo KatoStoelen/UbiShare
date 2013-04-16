@@ -24,7 +24,8 @@ import com.google.renamedgson.Gson;
 import com.google.renamedgson.GsonBuilder;
 
 /**
- * A request entity used to request updates from the server.
+ * A request entity used to send updates from the client to
+ * the server.
  * 
  * @author Kato
  */
@@ -41,6 +42,7 @@ public class Request {
 		UPDATE
 	}
 	
+	private String mUniqueId;
 	private RequestType mType;
 	private Collection<Entity> mUpdatedEntities = new ArrayList<Entity>();
 	
@@ -51,11 +53,12 @@ public class Request {
 	
 	/**
 	 * Initializes a new request of the specified type.
+	 * @param uniqueId The unique ID of the client.
 	 * @param type The type of request.
-	 * in seconds).
 	 */
-	public Request(RequestType type) {
-		setType(type);
+	public Request(String uniqueId, RequestType type) {
+		mUniqueId = uniqueId;
+		mType = type;
 	}
 	
 	/**
@@ -90,13 +93,13 @@ public class Request {
 	public RequestType getType() {
 		return mType;
 	}
-
+	
 	/**
 	 * Sets the type of the request.
 	 * @param type The type of the request.
 	 */
 	public void setType(RequestType type) {
-		this.mType = type;
+		mType = type;
 	}
 
 	/**
@@ -113,5 +116,21 @@ public class Request {
 	 */
 	public void setUpdatedEntities(Collection<Entity> updatedEntities) {
 		this.mUpdatedEntities = updatedEntities;
+	}
+
+	/**
+	 * Gets the unique ID of the client.
+	 * @return The unique ID of the client.
+	 */
+	public String getUniqueId() {
+		return mUniqueId;
+	}
+	
+	/**
+	 * Sets the unique ID of the client.
+	 * @param uniqueId The unique ID of the client.
+	 */
+	public void setUniqueId(String uniqueId) {
+		mUniqueId = uniqueId;
 	}
 }

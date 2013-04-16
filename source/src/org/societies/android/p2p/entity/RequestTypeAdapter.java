@@ -42,6 +42,7 @@ import com.google.renamedgson.reflect.TypeToken;
 public class RequestTypeAdapter implements 
 	JsonDeserializer<Request>, JsonSerializer<Request> {
 	
+	private static final String PROP_UNIQUE_ID = "unique_id";
 	private static final String PROP_TYPE = "type";
 	private static final String PROP_UPDATED_ENTITIES = "updated_entities";
 
@@ -60,6 +61,7 @@ public class RequestTypeAdapter implements
 				request.getUpdatedEntities(), collectionType);
 		
 		JsonObject jsonObject = new JsonObject();
+		jsonObject.addProperty(PROP_UNIQUE_ID, request.getUniqueId());
 		jsonObject.addProperty(PROP_TYPE, request.getType().name());
 		jsonObject.addProperty(PROP_UPDATED_ENTITIES, serializedEntities);
 		
@@ -74,6 +76,7 @@ public class RequestTypeAdapter implements
 	) throws JsonParseException {
 		JsonObject jsonObject = json.getAsJsonObject();
 		
+		JsonPrimitive idPrim = (JsonPrimitive) jsonObject.get(PROP_UNIQUE_ID);
 		JsonPrimitive typePrim = (JsonPrimitive) jsonObject.get(PROP_TYPE);
 		JsonPrimitive updatedEntitiesPrim = (JsonPrimitive) jsonObject.get(PROP_UPDATED_ENTITIES);
 		
@@ -87,6 +90,7 @@ public class RequestTypeAdapter implements
 				updatedEntitiesPrim.getAsString(), collectionType);
 		
 		Request request = new Request();
+		request.setUniqueId(idPrim.getAsString());
 		request.setType(RequestType.valueOf(typePrim.getAsString()));
 		request.setUpdatedEntities(updatedEntities);
 		
