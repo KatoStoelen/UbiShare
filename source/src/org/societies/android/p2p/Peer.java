@@ -30,6 +30,7 @@ abstract class Peer {
 	private final String mUniqueId;
 	private final ConnectionType mConnectionType;
 	private int mLastUpdateTime;
+	private boolean mActive;
 	
 	/**
 	 * Initiates a new peer.
@@ -39,6 +40,8 @@ abstract class Peer {
 	public Peer(String uniqueId, ConnectionType connectionType) {
 		mUniqueId = uniqueId;
 		mConnectionType = connectionType;
+		mLastUpdateTime = 0;
+		mActive = true;
 	}
 	
 	/**
@@ -82,5 +85,29 @@ abstract class Peer {
 	 */
 	public void setLastUpdateTime(int lastUpdateTime) {
 		mLastUpdateTime = lastUpdateTime;
+	}
+	
+	/**
+	 * Sets the last update time to the current time.
+	 */
+	public void setLastUpdateTimeNow() {
+		setLastUpdateTime((int)(System.currentTimeMillis() / 1000));
+	}
+
+	/**
+	 * Whether or not the client is active.
+	 * @return <code>true</code> if the client is active, otherwise
+	 * <code>false</code>.
+	 */
+	public boolean isActive() {
+		return mActive;
+	}
+
+	/**
+	 * Sets whether or not the client is active.
+	 * @param active Whether or not the client is active.
+	 */
+	public void setActive(boolean active) {
+		mActive = active;
 	}
 }

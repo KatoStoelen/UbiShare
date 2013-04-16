@@ -18,6 +18,7 @@ package org.societies.android.p2p;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.util.Collection;
+import java.util.UUID;
 
 import org.societies.android.p2p.entity.Request;
 import org.societies.android.p2p.entity.Request.RequestType;
@@ -26,6 +27,7 @@ import org.societies.android.platform.entity.Entity;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 /**
@@ -44,6 +46,7 @@ class P2PSyncClient extends Thread {
 	private final P2PConnection mConnection;
 	private final P2PConnectionListener mListener;
 	private final UpdateReceiver mReceiver;
+	private String mUniqueId;
 	private boolean mStopping;
 	
 	/**
@@ -70,6 +73,7 @@ class P2PSyncClient extends Thread {
 		Log.i(TAG, "SyncClient started");
 		
 		mReceiver.start();
+		mUniqueId = getUniqueId();
 		
 		try {
 			while (!mStopping) {
@@ -106,7 +110,7 @@ class P2PSyncClient extends Thread {
 			
 			mConnection.connect();
 			
-			Request request = new Request(RequestType.UPDATE);
+			Request request = new Request(mUniqueId, RequestType.UPDATE);
 			request.setUpdatedEntities(entities);
 			
 			try {
@@ -125,6 +129,30 @@ class P2PSyncClient extends Thread {
 			if (mReceiver.isAlive())
 				mReceiver.join();
 		} catch (InterruptedException e) { /* Ignore */ }
+	}
+	
+	/**
+	 * Gets a unique ID that can be used to identify this client. If the
+	 * unique ID is not found in the shared preferences, a new one is
+	 * generated.
+	 * @return A string containing a unique ID.
+	 */
+	private String getUniqueId() {
+		SharedPreferences preferences = mContext.getSharedPreferences(
+				P2PConstants.PREFERENCE_FILE, Context.MODE_PRIVATE);
+		
+		String uniqueId = preferences.getString(
+				P2PConstants.PREFERENCE_UNIQUE_ID, null);
+		
+		if (uniqueId == null) {
+			uniqueId = UUID.randomUUID().toString();
+			
+			preferences.edit()
+				.putString(P2PConstants.PREFERENCE_UNIQUE_ID, uniqueId)
+				.commit();
+		}
+		
+		return uniqueId;
 	}
 	
 	/**

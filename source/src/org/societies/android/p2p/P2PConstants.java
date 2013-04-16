@@ -28,8 +28,15 @@ interface P2PConstants {
 	/** The port number of the WiFi Direct sync client. */
 	public static final int WIFI_DIRECT_CLIENT_PORT = 8889;
 	
-	/** The name of the Bluetooth service. */
-	public static final String BLUETOOTH_SERVICE_NAME = "UbiShareP2P";
-	/** The UUID of the Bluetooth service. */
-	public static final UUID BLUETOOTH_SERVICE_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+	/** The name of the Bluetooth service of the server. */
+	public static final String BLUETOOTH_SERVICE_NAME_SERVER = "UbiShareP2P_Server";
+	/** The name of the Bluetooth service of the client. */
+	public static final String BLUETOOTH_SERVICE_NAME_CLIENT = "UbiShareP2P_Client";
+	/** The UUID of the Bluetooth service of the server. */
+	public static final UUID BLUETOOTH_SERVICE_UUID_SERVER = UUID.fromString("3f07178f-451e-4ef8-8b71-a78a5abe0e85");
+	
+	/** The name of the preference file. */
+	public static final String PREFERENCE_FILE = "p2p.pref";
+	/** The name of the unique ID preference. */
+	public static final String PREFERENCE_UNIQUE_ID = "unique_id";
 }

@@ -23,6 +23,8 @@ import java.io.InterruptedIOException;
 import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import org.societies.android.p2p.entity.Request;
 import org.societies.android.p2p.entity.Response;
@@ -157,5 +159,25 @@ class WiFiDirectConnection extends P2PConnection {
 		initialize(socket);
 		
 		return isConnected();
+	}
+	
+	/**
+	 * Gets the IP address of the remote host.
+	 * @return The IP address or the remote host, or <code>null</code>
+	 * if not connected.
+	 */
+	public String getRemoteIp() {
+		if (isConnected()) {
+			try {
+				String socketAddress =
+						mSocket.getRemoteSocketAddress().toString();
+				URI address = new URI("my://" + socketAddress);
+				
+				return address.getHost();
+			} catch (URISyntaxException e) {
+				return null;
+			}
+		}
+		else return null;
 	}
 }

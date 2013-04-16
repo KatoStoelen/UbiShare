@@ -21,6 +21,9 @@ import java.io.InterruptedIOException;
 import org.societies.android.p2p.entity.Request;
 import org.societies.android.p2p.entity.Response;
 
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
+
 /**
  * Provides a Bluetooth communication channel.
  * 
@@ -30,6 +33,8 @@ class BluetoothConnection extends P2PConnection {
 
 	/** Unique ID. */
 	private static final long serialVersionUID = -6960990814184751910L;
+	
+	private BluetoothSocket mSocket;
 
 	/**
 	 * Initializes a new Bluetooth connection.
@@ -69,5 +74,17 @@ class BluetoothConnection extends P2PConnection {
 	public boolean connect() throws IOException, InterruptedIOException {
 		// TODO Auto-generated method stub
 		return false;
+	}
+	
+	/**
+	 * Gets the remote device of this connection.
+	 * @return The remote device or this connection, or <code>null</code>
+	 * if not connected.
+	 */
+	public BluetoothDevice getRemoteDevice() {
+		if (isConnected())
+			return mSocket.getRemoteDevice();
+		else
+			return null;
 	}
 }
