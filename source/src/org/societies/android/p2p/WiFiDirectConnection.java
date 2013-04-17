@@ -29,6 +29,9 @@ import java.net.URISyntaxException;
 import org.societies.android.p2p.entity.Request;
 import org.societies.android.p2p.entity.Response;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Provides a Wi-Fi Direct communication channel.
  * 
@@ -36,16 +39,13 @@ import org.societies.android.p2p.entity.Response;
  */
 class WiFiDirectConnection extends P2PConnection {
 	
-	/** Unique ID. */
-	private static final long serialVersionUID = -2071972758995959880L;
-
 	public static final String TAG = "WiFiDirectConnection";
 
-	transient private Socket mSocket;
+	private Socket mSocket;
 	private InetSocketAddress mRemoteAddress;
 	
-	transient private BufferedReader mReader;
-	transient private BufferedWriter mWriter;
+	private BufferedReader mReader;
+	private BufferedWriter mWriter;
 	
 	private boolean mInitialized = false;
 	
@@ -71,6 +71,18 @@ class WiFiDirectConnection extends P2PConnection {
 		super(ConnectionType.WIFI_DIRECT);
 		
 		mRemoteAddress = remoteAddress;
+	}
+	
+	/**
+	 * Initializes an unestablished WiFi Direct connection. A call
+	 * to <code>connect()</code> is required before using this
+	 * connection.
+	 * @param in The serialized object.
+	 */
+	private WiFiDirectConnection(Parcel in) {
+		super(ConnectionType.WIFI_DIRECT);
+		
+		mRemoteAddress = new InetSocketAddress(in.readString(), in.readInt());
 	}
 	
 	/**
@@ -180,4 +192,41 @@ class WiFiDirectConnection extends P2PConnection {
 		}
 		else return null;
 	}
+
+	/* (non-Javadoc)
+	 * @see android.os.Parcelable#describeContents()
+	 */
+	public int describeContents() {
+		return 0;
+	}
+
+	/* (non-Javadoc)
+	 * @see android.os.Parcelable#writeToParcel(android.os.Parcel, int)
+	 */
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeString(mRemoteAddress.getHostName());
+		dest.writeInt(mRemoteAddress.getPort());
+	}
+	
+	/**
+	 * This field is required by Parcelable.
+	 */
+	public static final Parcelable.Creator<WiFiDirectConnection> CREATOR =
+			new Parcelable.Creator<WiFiDirectConnection>() {
+		/*
+		 * (non-Javadoc)
+		 * @see android.os.Parcelable.Creator#createFromParcel(android.os.Parcel)
+		 */
+		public WiFiDirectConnection createFromParcel(Parcel source) {
+			return new WiFiDirectConnection(source);
+		}
+		
+		/*
+		 * (non-Javadoc)
+		 * @see android.os.Parcelable.Creator#newArray(int)
+		 */
+		public WiFiDirectConnection[] newArray(int size) {
+			return new WiFiDirectConnection[size];
+		}
+	};
 }

@@ -219,7 +219,7 @@ class P2PSyncClient extends Thread {
 			ContentResolver resolver = mContext.getContentResolver();
 			
 			for (Entity entity : response.getEntities()) {
-				entity.fetchLocalId(resolver);
+				entity.fetchLocalIds(resolver);
 				
 				if (entity.getId() == Entity.ENTITY_DEFAULT_ID)
 					entity.insert(resolver);
