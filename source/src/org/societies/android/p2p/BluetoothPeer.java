@@ -17,52 +17,38 @@ package org.societies.android.p2p;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
-import java.net.InetSocketAddress;
+import java.util.UUID;
 
 import org.societies.android.p2p.P2PConnection.ConnectionType;
 
+import android.bluetooth.BluetoothDevice;
+
 /**
- * Class representing a WiFi Direct peer.
+ * Class representing a Bluetooth peer.
  * 
  * @author Kato
  */
-class WiFiDirectPeer extends Peer {
-	
-	private InetSocketAddress mAddress;
+public class BluetoothPeer extends Peer {
 
+	private final BluetoothDevice mDevice;
+	
 	/**
-	 * Initializes a new WiFi Direct peer.
+	 * Initializes a new Bluetooth peer.
 	 * @param uniqueId The unique ID of the peer.
-	 * @param ip The IP address of the peer.
-	 * @param port The port number of the peer.
+	 * @param device The Bluetooth device related to this peer.
 	 */
-	public WiFiDirectPeer(String uniqueId, String ip, int port) {
-		super(uniqueId, ConnectionType.WIFI_DIRECT);
+	public BluetoothPeer(String uniqueId, BluetoothDevice device) {
+		super(uniqueId, ConnectionType.BLUETOOTH);
 		
-		mAddress = new InetSocketAddress(ip, port);
+		mDevice = device;
 	}
 
 	@Override
 	public P2PConnection connect() throws IOException, InterruptedIOException {
-		P2PConnection connection = new WiFiDirectConnection(getAddress());
+		P2PConnection connection = new BluetoothConnection(
+				mDevice, UUID.fromString(getUniqueId()));
 		connection.connect();
 		
 		return connection;
-	}
-
-	/**
-	 * Gets the address of the peer.
-	 * @return The <code>InetSocketAddress</code> of the peer.
-	 */
-	public InetSocketAddress getAddress() {
-		return mAddress;
-	}
-
-	/**
-	 * Sets the address of the peer.
-	 * @param address The address of the peer.
-	 */
-	public void setAddress(InetSocketAddress address) {
-		mAddress = address;
 	}
 }

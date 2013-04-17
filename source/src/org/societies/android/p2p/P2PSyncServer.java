@@ -17,7 +17,9 @@ package org.societies.android.p2p;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.util.Collection;
 
+import org.societies.android.p2p.HandshakeLock.LockType;
 import org.societies.android.p2p.P2PConnection.ConnectionType;
 import org.societies.android.p2p.entity.Request;
 import org.societies.android.p2p.entity.Request.RequestType;
@@ -89,6 +91,28 @@ class P2PSyncServer extends Thread {
 	}
 	
 	/**
+	 * Gets the peer with the specified unique ID.
+	 * @param uniqueId The unique ID of the peer.
+	 * @return The peer with the specified unique ID, or <code>null</code> if
+	 * it does not exist.
+	 */
+	private Peer getPeer(String uniqueId) {
+		synchronized (mPeers) {
+			return mPeers.getPeer(uniqueId);
+		}
+	}
+	
+	/**
+	 * Adds a peer to the list.
+	 * @param peer The peer to add.
+	 */
+	private void addPeer(Peer peer) {
+		synchronized (mPeers) {
+			mPeers.add(peer);
+		}
+	}
+	
+	/**
 	 * Thread responsible for sending updates to the clients.
 	 */
 	private class ClientHandler extends Thread {
@@ -119,10 +143,10 @@ class P2PSyncServer extends Thread {
 							request.getType());
 			} catch (InterruptedIOException e) {
 				Log.e(TAG, "Timeout while reading request");
-			} catch (IOException e) {
-				Log.e(TAG, e.getMessage(), e);
 			} catch (InterruptedException e) {
-				Log.i(TAG, "Interrupted");
+				Log.i(TAG, "Interrupted while waiting for lock");
+			} catch (Exception e) {
+				Log.e(TAG, e.getMessage(), e);
 			} finally {
 				try {
 					mConnection.close();
@@ -133,13 +157,10 @@ class P2PSyncServer extends Thread {
 		/**
 		 * Handles handshake requests.
 		 * @param request The handshake request.
-		 * @throws InterruptedException If the thread is interrupted while acquiring
-		 * the lock.
-		 * @throws IOException If an error occurs while sending response.
+		 * @throws Exception If an error occurs while handling request.
 		 */
-		private void handleHandshake(Request request)
-				throws InterruptedException, IOException {
-			mHandshakeLock.lock(true);
+		private void handleHandshake(Request request) throws Exception {
+			mHandshakeLock.lock(LockType.HANDSHAKE);
 			
 			Peer peer = null;
 			if ((peer = getPeer(request.getUniqueId())) == null) {
@@ -148,17 +169,19 @@ class P2PSyncServer extends Thread {
 			}
 			peer.setActive(true);
 			
-			sendAllEntities();
+			sendEntities(Entity.getAllEntities(mContext.getContentResolver()));
 			
-			mHandshakeLock.unlock(true);
+			mHandshakeLock.unlock(LockType.HANDSHAKE);
 		}
-
+		
 		/**
-		 * Sends all the entities to the client.
+		 * Sends the specified entities to the client.
+		 * @param entities The entities to send.
+		 * @throws IOException If an error occurs while sending entities.
 		 */
-		private void sendAllEntities() throws IOException {
+		private void sendEntities(Collection<Entity> entities) throws IOException {
 			Response response = new Response();
-			//response.setEntities(entities); TODO: Get all entities.
+			response.setEntities(entities);
 			
 			mConnection.write(response);
 		}
@@ -170,33 +193,32 @@ class P2PSyncServer extends Thread {
 		 * the lock.
 		 */
 		private void handleClientUpdates(Request request) throws InterruptedException {
-			mHandshakeLock.lock(false);
+			mHandshakeLock.lock(LockType.UPDATE);
 			
-			// TODO: IMPLEMENT
+			Collection<Entity> update = request.getUpdatedEntities();
+			processUpdate(update);
 			
-			mHandshakeLock.unlock(false);
+			Response updateResponse = new Response();
+			updateResponse.setEntities(update);
+			
+			synchronized (mPeers) {
+				for (Peer peer : mPeers) {
+					if (peer.isActive())
+						new UpdateSender(peer, updateResponse).start();
+				}
+			}
+			
+			mHandshakeLock.unlock(LockType.UPDATE);
 		}
 		
 		/**
-		 * Gets the peer with the specified unique ID.
-		 * @param uniqueId The unique ID of the peer.
-		 * @return The peer with the specified unique ID, or <code>null</code> if
-		 * it does not exist.
+		 * Processes the received update by generating global IDs, if needed, and
+		 * inserting them into the database.
+		 * @param update The received update.
 		 */
-		private Peer getPeer(String uniqueId) {
-			synchronized (mPeers) {
-				return mPeers.getPeer(uniqueId);
-			}
-		}
-		
-		/**
-		 * Adds a peer to the list.
-		 * @param peer The peer to add.
-		 */
-		private void addPeer(Peer peer) {
-			synchronized (mPeers) {
-				mPeers.add(peer);
-			}
+		private void processUpdate(Collection<Entity> update) {
+			// TODO: INSERT UPDATES (Should the server also be a peer?)
+			// TODO: SET GLOBAL IDs
 		}
 		
 		/**
@@ -213,62 +235,55 @@ class P2PSyncServer extends Thread {
 						connection.getRemoteIp(),
 						P2PConstants.WIFI_DIRECT_CLIENT_PORT);
 			} else if (mConnection.getConnectionType() == ConnectionType.BLUETOOTH) {
-				return null;
+				BluetoothConnection connection = (BluetoothConnection) mConnection;
+				
+				return new BluetoothPeer(uniqueId, connection.getRemoteDevice());
 			} else {
-				return null;
+				throw new IllegalStateException("Unknown connection type");
 			}
 		}
 	}
 	
 	/**
-	 * Lock ensuring that the server does not send updates while a handshake is
-	 * in progress. Multiple handshakes can be handled simultaneously, the same
-	 * goes for updates. The only restriction is that updates and handshakes does
-	 * not happen at the same time.
-	 * 
-	 * @author Kato
+	 * Thread used for sending updates to clients.
 	 */
-	private class HandshakeLock {
+	private class UpdateSender extends Thread {
 		
-		private final Object mLock = new Object();
-		private int mUpdateLockCount = 0;
-		private int mHandshakeLockCount = 0;
+		public static final String TAG = P2PSyncServer.TAG + ":UpdateSender";
+		
+		private Peer mPeer;
+		private Response mResponse;
 		
 		/**
-		 * Acquires the lock.
-		 * @param handshake Whether or not it is a handshake lock.
-		 * @throws InterruptedException If the thread is interrupted while waiting
-		 * for lock.
+		 * Initializes a new update sender thread.
+		 * @param peer The peer to send to.
+		 * @param response The response to send.
 		 */
-		public void lock(boolean handshake) throws InterruptedException {
-			synchronized (mLock) {
-				if (handshake) {
-					while (mUpdateLockCount > 0)
-						mLock.wait();
-
-					mHandshakeLockCount++;
-				} else {
-					while (mHandshakeLockCount > 0)
-						mLock.wait();
-
-					mUpdateLockCount++;
-				}
-			}
+		public UpdateSender(Peer peer, Response response) {
+			mPeer = peer;
+			mResponse = response;
 		}
 		
-		/**
-		 * Releases the lock.
-		 * @param handshake Whether or not it was a handshake lock.
-		 */
-		public void unlock(boolean handshake) {
-			synchronized (mLock) {
-				if (handshake && mHandshakeLockCount > 0)
-					mHandshakeLockCount--;
-				else if (!handshake && mUpdateLockCount > 0)
-					mUpdateLockCount--;
+		@Override
+		public void run() {
+			P2PConnection connection = null;
+			
+			try {
+				connection = mPeer.connect();
 				
-				if (mHandshakeLockCount == 0 && mUpdateLockCount == 0)
-					mLock.notifyAll();
+				connection.write(mResponse);
+			} catch (InterruptedIOException e) {
+				Log.e(TAG, "Timeout when connecting to client");
+				mPeer.setActive(false);
+			} catch (IOException e) {
+				Log.e(TAG, e.getMessage(), e);
+				mPeer.setActive(false);
+			} finally {
+				if (connection != null) {
+					try {
+						connection.close();
+					} catch (IOException e) { /* Ignore */ }
+				}
 			}
 		}
 	}

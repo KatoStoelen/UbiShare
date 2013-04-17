@@ -17,17 +17,18 @@ package org.societies.android.p2p;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
-import java.io.Serializable;
 
 import org.societies.android.p2p.entity.Request;
 import org.societies.android.p2p.entity.Response;
+
+import android.os.Parcelable;
 
 /**
  * Base class of all peer-to-peer connections.
  * 
  * @author Kato
  */
-abstract class P2PConnection implements Serializable {
+abstract class P2PConnection implements Parcelable {
 	
 	/**
 	 * An enum of supported connection types.
@@ -40,9 +41,6 @@ abstract class P2PConnection implements Serializable {
 		WIFI_DIRECT
 	}
 	
-	/** Unique ID. */
-	private static final long serialVersionUID = -7661483437019363736L;
-
 	/**
 	 * The number of milliseconds before a read call times out and a
 	 * <code>InterruptedIOException</code> is thrown.
