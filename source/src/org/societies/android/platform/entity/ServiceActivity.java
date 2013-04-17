@@ -17,6 +17,8 @@ package org.societies.android.platform.entity;
 
 import java.util.List;
 
+import org.societies.android.api.cis.SocialContract.Services;
+
 import com.google.renamedgson.annotations.Expose;
 
 import android.content.ContentResolver;
@@ -69,6 +71,29 @@ public class ServiceActivity extends Entity {
 		return updatedActivities;
 	}
 	
+	/**
+	 * Gets a list of all service activities.
+	 * @param resolver The content resolver.
+	 * @return A list of service activities.
+	 * @throws Exception If an error occurs while fetching.
+	 */
+	public static List<ServiceActivity> getAllServiceActivities(
+			ContentResolver resolver) throws Exception {
+		List<ServiceActivity> activities = Entity.getEntities(
+				ServiceActivity.class,
+				resolver,
+				CONTENT_URI,
+				null,
+				null,
+				null,
+				null);
+		
+		for (ServiceActivity activity : activities)
+			activity.fetchGlobalIds(resolver);
+		
+		return activities;
+	}
+	
 	@Override
 	protected void populate(Cursor cursor) {
 		super.populate(cursor);
@@ -107,13 +132,23 @@ public class ServiceActivity extends Entity {
 	
 	@Override
 	protected void fetchGlobalIds(ContentResolver resolver) {
-		// TODO: implement
+		setGlobalIdFeedOwner(
+				Entity.getGlobalId(
+						Services.CONTENT_URI,
+						feedOwnerId,
+						Services.GLOBAL_ID,
+						resolver));
 	}
 	
 	@Override
-	public void fetchLocalId(ContentResolver resolver) {
+	public void fetchLocalIds(ContentResolver resolver) {
 		setId(Entity.getLocalId(CONTENT_URI, _ID, GLOBAL_ID, globalId, resolver));
-		// TODO: feedOwnerId
+		setFeedOwnerId(Entity.getLocalId(
+				Services.CONTENT_URI,
+				Services._ID,
+				Services.GLOBAL_ID,
+				globalIdFeedOwner,
+				resolver));
 	}
 	
 	@Override

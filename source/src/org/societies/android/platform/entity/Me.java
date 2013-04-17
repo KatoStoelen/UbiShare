@@ -91,7 +91,7 @@ public class Me extends Entity {
 	}
 
 	@Override
-	public void fetchLocalId(ContentResolver resolver) {
+	public void fetchLocalIds(ContentResolver resolver) {
 		// Deliberately empty
 	}
 

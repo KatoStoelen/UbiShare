@@ -71,6 +71,29 @@ public class Membership extends Entity {
 		return updatedMemberships;
 	}
 	
+	/**
+	 * Gets a list of all the memberships.
+	 * @param resolver The content resolver.
+	 * @return A list of memberships.
+	 * @throws Exception If an error occurs while fetching.
+	 */
+	public static List<Membership> getAllMemberships(
+			ContentResolver resolver) throws Exception {
+		List<Membership> memberships = Entity.getEntities(
+				Membership.class,
+				resolver,
+				CONTENT_URI,
+				null,
+				null,
+				null,
+				null);
+		
+		for (Membership membership : memberships)
+			membership.fetchGlobalIds(resolver);
+		
+		return memberships;
+	}
+	
 	@Override
 	protected void populate(Cursor cursor) {
 		super.populate(cursor);
@@ -121,7 +144,7 @@ public class Membership extends Entity {
 	}
 	
 	@Override
-	public void fetchLocalId(ContentResolver resolver) {
+	public void fetchLocalIds(ContentResolver resolver) {
 		setId(Entity.getLocalId(CONTENT_URI, _ID, GLOBAL_ID, globalId, resolver));
 		setMemberId(
 				Entity.getLocalId(

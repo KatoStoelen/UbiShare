@@ -17,6 +17,8 @@ package org.societies.android.platform.entity;
 
 import java.util.List;
 
+import org.societies.android.api.cis.SocialContract.People;
+
 import com.google.renamedgson.annotations.Expose;
 
 import android.content.ContentResolver;
@@ -67,6 +69,29 @@ public class Relationship extends Entity {
 		
 		return updatedRelationships;
 	}
+	
+	/**
+	 * Gets a list of all the relationships.
+	 * @param resolver The content resolver.
+	 * @return A list of relationships.
+	 * @throws Exception If an error occurs while fetching.
+	 */
+	public static List<Relationship> getAllRelationships(
+			ContentResolver resolver) throws Exception {
+		List<Relationship> relationships = Entity.getEntities(
+				Relationship.class,
+				resolver,
+				CONTENT_URI,
+				null,
+				null,
+				null,
+				null);
+		
+		for (Relationship relationship : relationships)
+			relationship.fetchGlobalIds(resolver);
+		
+		return relationships;
+	}
 
 	@Override
 	protected void populate(Cursor cursor) {
@@ -102,13 +127,35 @@ public class Relationship extends Entity {
 	
 	@Override
 	protected void fetchGlobalIds(ContentResolver resolver) {
-		// TODO: implement
+		setGlobalIdP1(
+				Entity.getGlobalId(
+						People.CONTENT_URI,
+						p1Id,
+						People.GLOBAL_ID,
+						resolver));
+		setGlobalIdP2(
+				Entity.getGlobalId(
+						People.CONTENT_URI,
+						p2Id,
+						People.GLOBAL_ID,
+						resolver));
 	}
 	
 	@Override
-	public void fetchLocalId(ContentResolver resolver) {
+	public void fetchLocalIds(ContentResolver resolver) {
 		setId(Entity.getLocalId(CONTENT_URI, _ID, GLOBAL_ID, globalId, resolver));
-		// TODO: p1id, p2id
+		setP1Id(Entity.getLocalId(
+				People.CONTENT_URI,
+				People._ID,
+				People.GLOBAL_ID,
+				globalIdP1,
+				resolver));
+		setP2Id(Entity.getLocalId(
+				People.CONTENT_URI,
+				People._ID,
+				People.GLOBAL_ID,
+				globalIdP2,
+				resolver));
 	}
 	
 	@Override

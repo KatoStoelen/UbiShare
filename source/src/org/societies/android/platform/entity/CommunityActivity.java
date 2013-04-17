@@ -70,6 +70,29 @@ public class CommunityActivity extends Entity {
 		return updatedActivities;
 	}
 	
+	/**
+	 * Gets a list of all the community activities.
+	 * @param resolver The content resolver.
+	 * @return A list of community activities.
+	 * @throws Exception If an error occurs while fetching.
+	 */
+	public static List<CommunityActivity> getAllCommunityActivities(
+			ContentResolver resolver) throws Exception {
+		List<CommunityActivity> activities = Entity.getEntities(
+				CommunityActivity.class,
+				resolver,
+				CONTENT_URI,
+				null,
+				null,
+				null,
+				null);
+		
+		for (CommunityActivity activity : activities)
+			activity.fetchGlobalIds(resolver);
+		
+		return activities;
+	}
+	
 	@Override
 	protected void populate(Cursor cursor) {
 		super.populate(cursor);
@@ -117,7 +140,7 @@ public class CommunityActivity extends Entity {
 	}
 	
 	@Override
-	public void fetchLocalId(ContentResolver resolver) {
+	public void fetchLocalIds(ContentResolver resolver) {
 		setId(Entity.getLocalId(CONTENT_URI, _ID, GLOBAL_ID, globalId, resolver));
 		setFeedOwnerId(
 				Entity.getLocalId(

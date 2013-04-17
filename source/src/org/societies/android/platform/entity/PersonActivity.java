@@ -19,6 +19,8 @@ import static org.societies.android.api.cis.SocialContract.PeopleActivity.*;
 
 import java.util.List;
 
+import org.societies.android.api.cis.SocialContract.People;
+
 import com.google.renamedgson.annotations.Expose;
 
 import android.content.ContentResolver;
@@ -68,6 +70,29 @@ public class PersonActivity extends Entity {
 		
 		return updatedActivities;
 	}
+	
+	/**
+	 * Gets a list of all the person activities.
+	 * @param resolver The content resolver.
+	 * @return A list of person activities.
+	 * @throws Exception If an error occurs while fetching.
+	 */
+	public static List<PersonActivity> getAllPersonActivities(
+			ContentResolver resolver) throws Exception {
+		List<PersonActivity> activities = Entity.getEntities(
+				PersonActivity.class,
+				resolver,
+				CONTENT_URI,
+				null,
+				null,
+				null,
+				null);
+		
+		for (PersonActivity activity : activities)
+			activity.fetchGlobalIds(resolver);
+		
+		return activities;
+	}
 
 	@Override
 	protected void populate(Cursor cursor) {
@@ -107,13 +132,24 @@ public class PersonActivity extends Entity {
 	
 	@Override
 	protected void fetchGlobalIds(ContentResolver resolver) {
-		// TODO: implement
+		setGlobalIdFeedOwner(
+				Entity.getGlobalId(
+						People.CONTENT_URI,
+						feedOwnerId,
+						People.GLOBAL_ID,
+						resolver));
 	}
 	
 	@Override
-	public void fetchLocalId(ContentResolver resolver) {
+	public void fetchLocalIds(ContentResolver resolver) {
 		setId(Entity.getLocalId(CONTENT_URI, _ID, GLOBAL_ID, globalId, resolver));
-		// TODO: fetch feedOwnerId
+		setFeedOwnerId(
+				Entity.getLocalId(
+						People.CONTENT_URI,
+						People._ID,
+						People.GLOBAL_ID,
+						globalIdFeedOwner,
+						resolver));
 	}
 
 	@Override

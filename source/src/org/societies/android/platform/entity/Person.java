@@ -66,6 +66,29 @@ public class Person extends Entity {
 		return updatedPeople;
 	}
 	
+	/**
+	 * Gets a list of all the people.
+	 * @param resolver The content resolver.
+	 * @return A list of people.
+	 * @throws Exception If an error occurs while fetching.
+	 */
+	public static List<Person> getAllPeople(
+			ContentResolver resolver) throws Exception {
+		List<Person> people = Entity.getEntities(
+				Person.class,
+				resolver,
+				CONTENT_URI,
+				null,
+				null,
+				null,
+				null);
+		
+		for (Person person : people)
+			person.fetchGlobalIds(resolver);
+		
+		return people;
+	}
+	
 	@Override
 	protected void populate(Cursor cursor) {
 		super.populate(cursor);
@@ -106,7 +129,7 @@ public class Person extends Entity {
 	}
 	
 	@Override
-	public void fetchLocalId(ContentResolver resolver) {
+	public void fetchLocalIds(ContentResolver resolver) {
 		setId(Entity.getLocalId(CONTENT_URI, _ID, GLOBAL_ID, globalId, resolver));
 	}
 	

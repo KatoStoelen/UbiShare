@@ -74,6 +74,29 @@ public class Sharing extends Entity {
 		return sharings;
 	}
 	
+	/**
+	 * Gets a list of all the sharings.
+	 * @param resolver The content resolver.
+	 * @return A list of sharings.
+	 * @throws Exception If an error occurs while fetching.
+	 */
+	public static List<Sharing> getAllSharings(
+			ContentResolver resolver) throws Exception {
+		List<Sharing> sharings = Entity.getEntities(
+				Sharing.class,
+				resolver,
+				CONTENT_URI,
+				null,
+				null,
+				null,
+				null);
+		
+		for (Sharing sharing : sharings)
+			sharing.fetchGlobalIds(resolver);
+		
+		return sharings;
+	}
+	
 	@Override
 	protected void populate(Cursor cursor) {
 		super.populate(cursor);
@@ -131,7 +154,7 @@ public class Sharing extends Entity {
 	}
 	
 	@Override
-	public void fetchLocalId(ContentResolver resolver) {
+	public void fetchLocalIds(ContentResolver resolver) {
 		setId(Entity.getLocalId(CONTENT_URI, _ID, GLOBAL_ID, globalId, resolver));
 		setServiceId(
 				Entity.getLocalId(

@@ -171,7 +171,7 @@ public class BoxDownloadOperation extends Thread {
 			if (entity.getGlobalId() == null || entity.getGlobalId().length() == 0)
 				entity.setGlobalId(String.valueOf(boxFile.getId()));
 			
-			entity.fetchLocalId(mResolver);
+			entity.fetchLocalIds(mResolver);
 		}
 		
 		return entity;

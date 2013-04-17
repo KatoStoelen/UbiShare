@@ -18,6 +18,8 @@ package org.societies.android.platform.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.societies.android.api.cis.SocialContract;
+
 import static org.societies.android.api.cis.SocialContract.SyncColumns.*;
 
 import com.google.renamedgson.Gson;
@@ -60,7 +62,7 @@ public abstract class Entity {
 			Class<E> entityClass, String globalId, ContentResolver resolver) throws Exception {
 		E entity = entityClass.newInstance();
 		entity.setGlobalId(globalId);
-		entity.fetchLocalId(resolver);
+		entity.fetchLocalIds(resolver);
 		
 		return entity.delete(resolver);
 	}
@@ -182,8 +184,7 @@ public abstract class Entity {
 	 * @return A list of the updated entities.
 	 * @throws Exception If an error occurs while fetching entities.
 	 */
-	public static List<Entity> getUpdatedEntities(
-			ContentResolver resolver) throws Exception {
+	public static List<Entity> getUpdatedEntities(ContentResolver resolver) throws Exception {
 		List<Entity> updatedEntities = new ArrayList<Entity>();
 		
 		updatedEntities.addAll(Community.getUpdatedCommunities(resolver));
@@ -197,6 +198,30 @@ public abstract class Entity {
 		updatedEntities.addAll(Sharing.getUpdatedSharings(resolver));
 		
 		return updatedEntities;
+	}
+	
+	/**
+	 * Gets all the entities related to the specified account type and account name.
+	 * @param resolver The content resolver.
+	 * @return A list of all the entities.
+	 * @throws Exception If an error occurs while fetching entities.
+	 * @see Entity#SELECTION_ACCOUNT_NAME
+	 * @see Entity#SELECTION_ACCOUNT_TYPE
+	 */
+	public static List<Entity> getAllEntities(ContentResolver resolver) throws Exception {
+		List<Entity> entities = new ArrayList<Entity>();
+		
+		entities.addAll(Community.getAllCommunities(resolver));
+		entities.addAll(CommunityActivity.getAllCommunityActivities(resolver));
+		entities.addAll(Membership.getAllMemberships(resolver));
+		entities.addAll(Person.getAllPeople(resolver));
+		entities.addAll(PersonActivity.getAllPersonActivities(resolver));
+		entities.addAll(Relationship.getAllRelationships(resolver));
+		entities.addAll(Service.getAllServices(resolver));
+		entities.addAll(ServiceActivity.getAllServiceActivities(resolver));
+		entities.addAll(Sharing.getAllSharings(resolver));
+		
+		return entities;
 	}
 	
 	/**
@@ -459,12 +484,12 @@ public abstract class Entity {
 	protected abstract void fetchGlobalIds(ContentResolver resolver);
 	
 	/**
-	 * Fetches the local ID of the entity from the database. If the entity
+	 * Fetches the local IDs of the entity from the database. If the entity
 	 * does not exist in the database, the local ID is set to
 	 * {@link Entity#ENTITY_DEFAULT_ID}.
 	 * @param resolver The content resolver.
 	 */
-	public abstract void fetchLocalId(ContentResolver resolver);
+	public abstract void fetchLocalIds(ContentResolver resolver);
 	
 	/**
 	 * Gets the global ID of the entity.

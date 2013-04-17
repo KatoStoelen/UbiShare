@@ -71,6 +71,29 @@ public class Community extends Entity {
 	}
 	
 	/**
+	 * Gets a list of all the communities.
+	 * @param resolver The content resolver.
+	 * @return The list of communities.
+	 * @throws Exception If an error occurs while fetching.
+	 */
+	public static List<Community> getAllCommunities(
+			ContentResolver resolver) throws Exception {
+		List<Community> communities = Entity.getEntities(
+				Community.class,
+				resolver,
+				CONTENT_URI,
+				null,
+				null,
+				null,
+				null);
+		
+		for (Community community : communities)
+			community.fetchGlobalIds(resolver);
+		
+		return communities;
+	}
+	
+	/**
 	 * Checks whether a community with the specified global ID exists.
 	 * @param globalId The global ID of the community.
 	 * @param resolver The content resolver.
@@ -139,7 +162,7 @@ public class Community extends Entity {
 	}
 	
 	@Override
-	public void fetchLocalId(ContentResolver resolver) {
+	public void fetchLocalIds(ContentResolver resolver) {
 		setId(Entity.getLocalId(CONTENT_URI, _ID, GLOBAL_ID, globalId, resolver));
 		setOwnerId(
 				Entity.getLocalId(

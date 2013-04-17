@@ -17,6 +17,8 @@ package org.societies.android.platform.entity;
 
 import java.util.List;
 
+import org.societies.android.api.cis.SocialContract.People;
+
 import com.google.renamedgson.annotations.Expose;
 
 import android.content.ContentResolver;
@@ -73,6 +75,29 @@ public class Service extends Entity {
 		return updatedServices;
 	}
 	
+	/**
+	 * Gets a list of all services.
+	 * @param resolver The content resolver.
+	 * @return A list of services.
+	 * @throws Exception If an error occurs while fetching.
+	 */
+	public static List<Service> getAllServices(
+			ContentResolver resolver) throws Exception {
+		List<Service> services = Entity.getEntities(
+				Service.class,
+				resolver,
+				CONTENT_URI,
+				null,
+				null,
+				null,
+				null);
+		
+		for (Service service : services)
+			service.fetchGlobalIds(resolver);
+		
+		return services;
+	}
+	
 	@Override
 	protected void populate(Cursor cursor) {
 		super.populate(cursor);
@@ -119,13 +144,23 @@ public class Service extends Entity {
 	
 	@Override
 	protected void fetchGlobalIds(ContentResolver resolver) {
-		// TODO: implement
+		setGlobalIdOwner(
+				Entity.getGlobalId(
+						People.CONTENT_URI,
+						ownerId,
+						People.GLOBAL_ID,
+						resolver));
 	}
 	
 	@Override
-	public void fetchLocalId(ContentResolver resolver) {
+	public void fetchLocalIds(ContentResolver resolver) {
 		setId(Entity.getLocalId(CONTENT_URI, _ID, GLOBAL_ID, globalId, resolver));
-		// TODO: ownerId
+		setOwnerId(Entity.getLocalId(
+				People.CONTENT_URI,
+				People._ID,
+				People.GLOBAL_ID,
+				globalIdOwner,
+				resolver));
 	}
 	
 	@Override
