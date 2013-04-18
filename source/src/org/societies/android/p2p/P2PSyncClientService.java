@@ -31,6 +31,8 @@ class P2PSyncClientService extends Service {
 	public static final String EXTRA_CONNECTION = "extra_connection";
 	/** Name of the connection listener extra. */
 	public static final String EXTRA_LISTENER = "extra_listener";
+	/** Name of the unique ID extra. */
+	public static final String EXTRA_UNIQUE_ID = "extra_unique_id";
 	
 	private final IBinder mBinder = new SyncClientBinder();
 	private P2PSyncClient mSyncClient;
@@ -41,9 +43,10 @@ class P2PSyncClientService extends Service {
 				(P2PConnection) intent.getSerializableExtra(EXTRA_CONNECTION);
 		P2PConnectionListener listener =
 				(P2PConnectionListener) intent.getSerializableExtra(EXTRA_LISTENER);
+		String uniqueId = intent.getStringExtra(EXTRA_UNIQUE_ID);
 		
 		if (mSyncClient == null) {
-			mSyncClient = new P2PSyncClient(connection, listener, this);
+			mSyncClient = new P2PSyncClient(uniqueId, connection, listener, this);
 			mSyncClient.start();
 		}
 		

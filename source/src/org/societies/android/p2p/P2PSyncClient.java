@@ -18,8 +18,10 @@ package org.societies.android.p2p;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.util.Collection;
-import java.util.UUID;
+import java.util.LinkedList;
+import java.util.Queue;
 
+import org.societies.android.p2p.UpdatePoller.UpdateListener;
 import org.societies.android.p2p.entity.Request;
 import org.societies.android.p2p.entity.Request.RequestType;
 import org.societies.android.p2p.entity.Response;
@@ -27,7 +29,6 @@ import org.societies.android.platform.entity.Entity;
 
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.util.Log;
 
 /**
@@ -35,36 +36,38 @@ import android.util.Log;
  * 
  * @author Kato
  */
-class P2PSyncClient extends Thread {
+class P2PSyncClient extends Thread implements UpdateListener {
 	
 	public static final String TAG = "P2PSyncClient";
-	
-	/** The interval (in milliseconds) between each poll for updated records. */
-	private static final int POLL_INTERVAL = 5000;
 	
 	private final Context mContext;
 	private final P2PConnection mConnection;
 	private final P2PConnectionListener mListener;
 	private final UpdateReceiver mReceiver;
-	private String mUniqueId;
+	private final UpdatePoller mPoller;
+	private final String mUniqueId;
 	private boolean mStopping;
 	
 	/**
 	 * Initiates a new sync client.
+	 * @param uniqueId The unique ID of this client.
 	 * @param connection The connection to the server, cannot be <code>null</code>.
 	 * @param listener The connection listener used for receiving updates
 	 * from server, cannot be <code>null</code>.
 	 * @param context The context to use, cannot be <code>null</code>.
 	 */
 	public P2PSyncClient(
+			String uniqueId,
 			P2PConnection connection,
 			P2PConnectionListener listener,
 			Context context) {
+		mUniqueId = uniqueId;
 		mConnection = connection;
 		mListener = listener;
 		mContext = context;
 		
 		mReceiver = new UpdateReceiver();
+		mPoller = new UpdatePoller(context, this);
 		mStopping = false;
 	}
 	
@@ -73,29 +76,54 @@ class P2PSyncClient extends Thread {
 		Log.i(TAG, "SyncClient started");
 		
 		mReceiver.start();
-		mUniqueId = getUniqueId();
 		
 		try {
-			while (!mStopping) {
-				Collection<Entity> updatedEntities = Entity.getUpdatedEntities(
-						mContext.getContentResolver());
-				
-				sendEntities(updatedEntities);
-				
-				Thread.sleep(POLL_INTERVAL);
-			}
+			performHandshake();
+			
+			mPoller.start();
 		} catch (IOException e) {
 			Log.e(TAG, e.getMessage(), e);
-		} catch (InterruptedException e) {
-			if (!mStopping)
-				Log.e(TAG, "Thread was interrupted while sleeping");
-		} catch (Exception e) {
-			Log.e(TAG, "Error while fetching entities", e);
 		}
 		
 		waitForReceiverToTerminate();
 		
 		Log.i(TAG, "SyncClient terminated");
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.societies.android.p2p.UpdatePoller.UpdateListener#onEntitiesAvailable(java.util.Collection)
+	 */
+	public void onEntitiesAvailable(Collection<Entity> entities) {
+		// TODO IMPLEMENT
+	}
+
+	/**
+	 * Sends a handshake request to the server.
+	 * @throws IOException If an error occurs while sending request.
+	 * @throws InterruptedIOException It a timeout occurs while sending request.
+	 */
+	private void performHandshake() throws InterruptedIOException, IOException {
+		Request handshake = new Request(mUniqueId, RequestType.HANDSHAKE);
+		
+		mConnection.connect();
+		mConnection.write(handshake);
+		
+		Response response = mConnection.readResponse();
+		
+		mConnection.close();
+		
+		insertEntities(response.getEntities());
+	}
+
+	/**
+	 * Inserts the specified entities into the database.
+	 * @param entities The entities to insert.
+	 */
+	private void insertEntities(Collection<Entity> entities) {
+		Log.i(TAG, "Inserting entities: " + entities.size());
+		
+		for (Entity entity : entities)
+			entity.insert(mContext.getContentResolver());
 	}
 
 	/**
@@ -132,30 +160,6 @@ class P2PSyncClient extends Thread {
 	}
 	
 	/**
-	 * Gets a unique ID that can be used to identify this client. If the
-	 * unique ID is not found in the shared preferences, a new one is
-	 * generated.
-	 * @return A string containing a unique ID.
-	 */
-	private String getUniqueId() {
-		SharedPreferences preferences = mContext.getSharedPreferences(
-				P2PConstants.PREFERENCE_FILE, Context.MODE_PRIVATE);
-		
-		String uniqueId = preferences.getString(
-				P2PConstants.PREFERENCE_UNIQUE_ID, null);
-		
-		if (uniqueId == null) {
-			uniqueId = UUID.randomUUID().toString();
-			
-			preferences.edit()
-				.putString(P2PConstants.PREFERENCE_UNIQUE_ID, uniqueId)
-				.commit();
-		}
-		
-		return uniqueId;
-	}
-	
-	/**
 	 * Stops the sync client.
 	 * @param awaitTermination Whether or not to block until sync client
 	 * has terminated.
@@ -165,6 +169,8 @@ class P2PSyncClient extends Thread {
 	public void stopSyncClient(
 			boolean awaitTermination) throws InterruptedException {
 		mStopping = true;
+		
+		mPoller.stopPolling();
 		
 		if (awaitTermination && isAlive()) {
 			if (getState() == State.TIMED_WAITING)
@@ -178,9 +184,18 @@ class P2PSyncClient extends Thread {
 	 * Thread used to receive updates pushed from the server.
 	 */
 	private class UpdateReceiver extends Thread {
+		
+		public static final String TAG = P2PSyncClient.TAG + ":UpdateReceiver";
+		
+		private final Queue<Response> mResponseQueue =
+				new LinkedList<Response>();
+		private final ResponseHandler mHandler = new ResponseHandler();
+		
 		@Override
 		public void run() {
 			Log.i(TAG, "UpdateReceiver started");
+			
+			mHandler.start();
 			
 			try {
 				while (!mStopping) {
@@ -188,7 +203,7 @@ class P2PSyncClient extends Thread {
 					try {
 						connection = mListener.acceptConnection();
 						
-						handleResponse(connection.readResponse());
+						enqueueResponse(connection.readResponse());
 					} catch (InterruptedIOException e) {
 						/* Ignore */
 					} finally {
@@ -201,35 +216,23 @@ class P2PSyncClient extends Thread {
 				closeListener();
 			}
 			
+			if (!mStopping || mHandler.getState() == State.TIMED_WAITING)
+				mHandler.interrupt();
+			
 			Log.i(TAG, "UpdateReceiver terminated");
 		}
 		
 		/**
-		 * Handles the updates pushed form the server.
-		 * @param response The received response entity.
+		 * Enqueues the specified response.
+		 * @param response The response to enqueue.
 		 */
-		private void handleResponse(Response response) {
-			if (response == null) {
-				Log.i(TAG, "Received response: null");
-				return;
-			}
-			
-			Log.i(TAG, "Entities in response: " + response.getEntities().size());
-			
-			ContentResolver resolver = mContext.getContentResolver();
-			
-			for (Entity entity : response.getEntities()) {
-				entity.fetchLocalIds(resolver);
-				
-				if (entity.getId() == Entity.ENTITY_DEFAULT_ID)
-					entity.insert(resolver);
-				else
-					entity.update(resolver);
-				
-				// TODO: Figure out DELETION of entities
+		private void enqueueResponse(Response response) {
+			synchronized (mResponseQueue) {
+				mResponseQueue.add(response);
+				mResponseQueue.notify();
 			}
 		}
-
+		
 		/**
 		 * Closes the P2P connection listener.
 		 */
@@ -250,6 +253,68 @@ class P2PSyncClient extends Thread {
 				try {
 					connection.close();
 				} catch (IOException e) { /* Ignore */ }
+			}
+		}
+		
+		/**
+		 * Handle responses in separate thread to make sure that the update receiver
+		 * is always ready to receive updates.
+		 */
+		private class ResponseHandler extends Thread {
+			
+			public static final String TAG = UpdateReceiver.TAG + ":ResponseHandler";
+			
+			@Override
+			public void run() {
+				Log.i(TAG, "ResponseHandler started");
+				
+				try {
+					while (!mStopping) {
+						Response response = null;
+						synchronized (mResponseQueue) {
+							while (mResponseQueue.isEmpty())
+								mResponseQueue.wait();
+							
+							response = mResponseQueue.poll();
+						}
+						
+						handleResponse(response);
+					}
+				} catch (InterruptedException e) {
+					if (!mStopping)
+						Log.i(TAG, "Interrupted while waiting for queue");
+				}
+				
+				Log.i(TAG, "ResponseHandler terminated");
+			}
+			
+			/**
+			 * Handles the received updates.
+			 * @param response The received response.
+			 */
+			private void handleResponse(Response response) {
+				if (response == null) {
+					Log.i(TAG, "Received response: null");
+					return;
+				}
+				
+				Log.i(TAG, "Entities in response: " + response.getEntities().size());
+				
+				ContentResolver resolver = mContext.getContentResolver();
+				
+				for (Entity entity : response.getEntities()) {
+					entity.fetchLocalIds(resolver);
+					
+					if (entity.getDeletedFlag() != 0
+							&& entity.getId() != Entity.ENTITY_DEFAULT_ID)
+						entity.delete(resolver);
+					else if (entity.getDeletedFlag() != 0)
+						Log.e(TAG, "Could not delete entity: id = -1");
+					else if (entity.getId() == Entity.ENTITY_DEFAULT_ID)
+						entity.insert(resolver);
+					else
+						entity.update(resolver);
+				}
 			}
 		}
 	}

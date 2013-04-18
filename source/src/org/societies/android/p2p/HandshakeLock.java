@@ -23,7 +23,7 @@ package org.societies.android.p2p;
  * 
  * @author Kato
  */
-public class HandshakeLock {
+class HandshakeLock {
 	
 	/**
 	 * Enum used for separating what type of lock is acquired.

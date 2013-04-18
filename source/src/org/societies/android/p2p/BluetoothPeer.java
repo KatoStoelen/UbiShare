@@ -28,7 +28,7 @@ import android.bluetooth.BluetoothDevice;
  * 
  * @author Kato
  */
-public class BluetoothPeer extends Peer {
+class BluetoothPeer extends Peer {
 
 	private final BluetoothDevice mDevice;
 	

@@ -17,6 +17,7 @@ package org.societies.android.p2p;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.UUID;
 
 import org.societies.android.p2p.P2PConnection.ConnectionType;
 
@@ -25,6 +26,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
@@ -257,8 +259,31 @@ public class P2PSyncManager {
 				P2PSyncClientService.EXTRA_LISTENER,
 				new WiFiDirectConnectionListener(
 						P2PConstants.WIFI_DIRECT_CLIENT_PORT));
+		intent.putExtra(P2PSyncClientService.EXTRA_UNIQUE_ID, getUniqueId());
 		
 		mContext.startService(intent);
+	}
+	
+	/**
+	 * Gets a unique ID that can be used to identify a client.
+	 * @return A string containing a unique ID.
+	 */
+	private String getUniqueId() {
+		SharedPreferences preferences =
+				mContext.getSharedPreferences(
+						P2PConstants.PREFERENCE_FILE, Context.MODE_PRIVATE);
+		
+		String uniqueId = preferences.getString(P2PConstants.PREFERENCE_UNIQUE_ID, null);
+		
+		if (uniqueId == null) {
+			uniqueId = UUID.randomUUID().toString();
+			
+			preferences.edit()
+				.putString(P2PConstants.PREFERENCE_UNIQUE_ID, uniqueId)
+				.commit();
+		}
+		
+		return uniqueId;
 	}
 	
 	/**
@@ -267,7 +292,7 @@ public class P2PSyncManager {
 	 * synchronization has terminated.
 	 */
 	public void stopSync(boolean awaitTermination) {
-		// TODO: Implement
+		// TODO: IMPLEMENT
 	}
 	
 	private final ConnectionInfoListener mConnectionListener = new ConnectionInfoListener() {

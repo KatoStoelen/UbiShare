@@ -61,6 +61,8 @@ class P2PSyncServer extends Thread {
 
 	@Override
 	public void run() {
+		// TODO: Add UpdatePoller
+		
 		try {
 			while (!mStopping) {
 				try {
@@ -168,6 +170,8 @@ class P2PSyncServer extends Thread {
 				addPeer(peer);
 			}
 			peer.setActive(true);
+			
+			// TODO: find a way to update address if client has been offline (WiFi direct)
 			
 			sendEntities(Entity.getAllEntities(mContext.getContentResolver()));
 			

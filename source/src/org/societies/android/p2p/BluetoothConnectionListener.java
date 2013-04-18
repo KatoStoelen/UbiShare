@@ -28,7 +28,7 @@ import android.os.Parcelable;
  * 
  * @author Kato
  */
-public class BluetoothConnectionListener extends P2PConnectionListener {
+class BluetoothConnectionListener extends P2PConnectionListener {
 
 	/**
 	 * Initializes a new Bluetooth connection listener.
