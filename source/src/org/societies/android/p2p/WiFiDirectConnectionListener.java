@@ -22,6 +22,9 @@ import java.net.Socket;
 
 import org.societies.android.p2p.P2PConnection.ConnectionType;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Connection listener for WiFi Direct.
  * 
@@ -29,12 +32,9 @@ import org.societies.android.p2p.P2PConnection.ConnectionType;
  */
 public class WiFiDirectConnectionListener extends P2PConnectionListener {
 	
-	/** Unique ID. */
-	private static final long serialVersionUID = 7350321224017878410L;
-	
 	private int mPort;
 	transient private ServerSocket mListener;
-	private boolean mIsInitialized;
+	private boolean mIsInitialized = false;
 	
 	/**
 	 * Initializes a new connection listener on the specified port.
@@ -44,7 +44,17 @@ public class WiFiDirectConnectionListener extends P2PConnectionListener {
 		super(ConnectionType.WIFI_DIRECT);
 		
 		mPort = port;
-		mIsInitialized = false;
+	}
+	
+	/**
+	 * Initializes a new connection listener from the specified
+	 * serialized object.
+	 * @param in The serialized connection listener.
+	 */
+	private WiFiDirectConnectionListener(Parcel in) {
+		super(ConnectionType.WIFI_DIRECT);
+		
+		mPort = in.readInt();
 	}
 
 	@Override
@@ -71,4 +81,39 @@ public class WiFiDirectConnectionListener extends P2PConnectionListener {
 		return new WiFiDirectConnection(clientSocket);
 	}
 
+	/* (non-Javadoc)
+	 * @see android.os.Parcelable#describeContents()
+	 */
+	public int describeContents() {
+		return 0;
+	}
+
+	/* (non-Javadoc)
+	 * @see android.os.Parcelable#writeToParcel(android.os.Parcel, int)
+	 */
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeInt(mPort);
+	}
+
+	/**
+	 * Required by Parcelable.
+	 */
+	public static final Parcelable.Creator<WiFiDirectConnectionListener> CREATOR =
+			new Parcelable.Creator<WiFiDirectConnectionListener>() {
+		/*
+		 * (non-Javadoc)
+		 * @see android.os.Parcelable.Creator#createFromParcel(android.os.Parcel)
+		 */
+		public WiFiDirectConnectionListener createFromParcel(Parcel source) {
+			return new WiFiDirectConnectionListener(source);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see android.os.Parcelable.Creator#newArray(int)
+		 */
+		public WiFiDirectConnectionListener[] newArray(int size) {
+			return new WiFiDirectConnectionListener[size];
+		}
+	};
 }

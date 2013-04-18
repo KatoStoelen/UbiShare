@@ -20,6 +20,9 @@ import java.io.InterruptedIOException;
 
 import org.societies.android.p2p.P2PConnection.ConnectionType;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Bluetooth connection listener.
  * 
@@ -27,9 +30,6 @@ import org.societies.android.p2p.P2PConnection.ConnectionType;
  */
 public class BluetoothConnectionListener extends P2PConnectionListener {
 
-	/** Unique ID. */
-	private static final long serialVersionUID = 7877091133368946345L;
-	
 	/**
 	 * Initializes a new Bluetooth connection listener.
 	 */
@@ -55,4 +55,40 @@ public class BluetoothConnectionListener extends P2PConnectionListener {
 		return null;
 	}
 
+	/* (non-Javadoc)
+	 * @see android.os.Parcelable#describeContents()
+	 */
+	public int describeContents() {
+		return 0;
+	}
+
+	/* (non-Javadoc)
+	 * @see android.os.Parcelable#writeToParcel(android.os.Parcel, int)
+	 */
+	public void writeToParcel(Parcel dest, int flags) {
+		// TODO: IMPLEMENT
+	}
+
+	/**
+	 * Required by Parcelable.
+	 */
+	public static final Parcelable.Creator<BluetoothConnectionListener> CREATOR =
+			new Creator<BluetoothConnectionListener>() {
+		/*
+		 * (non-Javadoc)
+		 * @see android.os.Parcelable.Creator#newArray(int)
+		 */
+		public BluetoothConnectionListener[] newArray(int size) {
+			return new BluetoothConnectionListener[size];
+		}
+		
+		/*
+		 * (non-Javadoc)
+		 * @see android.os.Parcelable.Creator#createFromParcel(android.os.Parcel)
+		 */
+		public BluetoothConnectionListener createFromParcel(Parcel source) {
+			// TODO: IMPLEMENT
+			return null;
+		}
+	};
 }

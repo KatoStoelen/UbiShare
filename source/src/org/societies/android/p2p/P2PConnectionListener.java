@@ -17,19 +17,18 @@ package org.societies.android.p2p;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
-import java.io.Serializable;
 
 import org.societies.android.p2p.P2PConnection.ConnectionType;
+
+import android.os.Parcelable;
 
 /**
  * Base class of connection listeners.
  * 
  * @author Kato
  */
-abstract class P2PConnectionListener implements Serializable {
+abstract class P2PConnectionListener implements Parcelable {
 	
-	/** Unique ID. */
-	private static final long serialVersionUID = -5562556424047117337L;
 	/**
 	 * The number of milliseconds before a call to acceptConnection times
 	 * out and a <code>InterruptedIOException</code> is thrown.
