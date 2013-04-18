@@ -112,7 +112,7 @@ public class BoxUploadOperation extends Thread {
 				renameFile(response.getFile());
 			}
 			
-			mEntity.setDirty(0);
+			mEntity.setDirtyFlag(0);
 			mEntity.update(mResolver);
 		} else {
 			throw new IOException("Failed to upload entity: " + response.getStatus());

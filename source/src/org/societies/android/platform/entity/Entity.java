@@ -18,12 +18,11 @@ package org.societies.android.platform.entity;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.societies.android.api.cis.SocialContract;
-
 import static org.societies.android.api.cis.SocialContract.SyncColumns.*;
 
 import com.google.renamedgson.Gson;
 import com.google.renamedgson.GsonBuilder;
+import com.google.renamedgson.annotations.Expose;
 
 import android.content.ContentResolver;
 import android.content.ContentUris;
@@ -49,6 +48,7 @@ public abstract class Entity {
 	private String accountType = SELECTION_ACCOUNT_TYPE;
 	private String accountName = SELECTION_ACCOUNT_NAME;
 	private int dirty;
+	@Expose private int deleted;
 	
 	/**
 	 * Removes the entity with the specified global ID from the database.
@@ -369,7 +369,8 @@ public abstract class Entity {
 	protected void populate(Cursor cursor) {
 		setAccountType(Entity.getString(cursor, ACCOUNT_TYPE));
 		setAccountName(Entity.getString(cursor, ACCOUNT_NAME));
-		setDirty(Entity.getInt(cursor, DIRTY));
+		setDirtyFlag(Entity.getInt(cursor, DIRTY));
+		setDeletedFlag(Entity.getInt(cursor, DELETED));
 	}
 	
 	/**
@@ -382,6 +383,7 @@ public abstract class Entity {
 		values.put(ACCOUNT_NAME, accountName);
 		values.put(ACCOUNT_TYPE, accountType);
 		values.put(DIRTY, dirty);
+		values.put(DELETED, deleted);
 		
 		return values;
 	}
@@ -539,7 +541,7 @@ public abstract class Entity {
 	 * Gets the dirty flag of the entity.
 	 * @return The dirty flag of the entity.
 	 */
-	public int getDirty() {
+	public int getDirtyFlag() {
 		return dirty;
 	}
 
@@ -547,7 +549,23 @@ public abstract class Entity {
 	 * Sets the dirty flag of the entity.
 	 * @param dirty The dirty flag to set.
 	 */
-	public void setDirty(int dirty) {
+	public void setDirtyFlag(int dirty) {
 		this.dirty = dirty;
+	}
+
+	/**
+	 * Gets the deleted flag of the entity.
+	 * @return The deleted flag of the entity.
+	 */
+	public int getDeletedFlag() {
+		return deleted;
+	}
+
+	/**
+	 * Sets the deleted flag of the entity.
+	 * @param deleted The deleted flag to set.
+	 */
+	public void setDeletedFlag(int deleted) {
+		this.deleted = deleted;
 	}
 }
