@@ -46,6 +46,7 @@ class P2PSyncClient extends Thread implements UpdateListener {
 	private final UpdateReceiver mReceiver;
 	private final UpdatePoller mPoller;
 	private final String mUniqueId;
+	private Queue<Collection<Entity>> mUpdateQueue;
 	private boolean mStopping;
 	
 	/**
@@ -68,6 +69,7 @@ class P2PSyncClient extends Thread implements UpdateListener {
 		
 		mReceiver = new UpdateReceiver();
 		mPoller = new UpdatePoller(context, this);
+		mUpdateQueue = new LinkedList<Collection<Entity>>();
 		mStopping = false;
 	}
 	
@@ -81,10 +83,26 @@ class P2PSyncClient extends Thread implements UpdateListener {
 			performHandshake();
 			
 			mPoller.start();
+			
+			while (!mStopping) {
+				Collection<Entity> updatedEntities = null;
+				synchronized (mUpdateQueue) {
+					while (mUpdateQueue.isEmpty())
+						mUpdateQueue.wait();
+					
+					updatedEntities = mUpdateQueue.poll();
+				}
+				
+				sendEntities(updatedEntities);
+			}
 		} catch (IOException e) {
 			Log.e(TAG, e.getMessage(), e);
+		} catch (InterruptedException e) {
+			if (!mStopping)
+				Log.e(TAG, "Interrupted while waiting for queue");
 		}
 		
+		Log.i(TAG, "Waiting for UpdateReceiver to terminate...");
 		waitForReceiverToTerminate();
 		
 		Log.i(TAG, "SyncClient terminated");
@@ -94,7 +112,12 @@ class P2PSyncClient extends Thread implements UpdateListener {
 	 * @see org.societies.android.p2p.UpdatePoller.UpdateListener#onEntitiesAvailable(java.util.Collection)
 	 */
 	public void onEntitiesAvailable(Collection<Entity> entities) {
-		// TODO IMPLEMENT
+		synchronized (mUpdateQueue) {
+			mUpdateQueue.add(entities);
+			mUpdateQueue.notify();
+		}
+		
+		mPoller.resetEntityDirtyFlag(entities, mContext.getContentResolver());
 	}
 
 	/**

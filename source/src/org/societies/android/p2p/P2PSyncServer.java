@@ -21,11 +21,13 @@ import java.util.Collection;
 
 import org.societies.android.p2p.HandshakeLock.LockType;
 import org.societies.android.p2p.P2PConnection.ConnectionType;
+import org.societies.android.p2p.UpdatePoller.UpdateListener;
 import org.societies.android.p2p.entity.Request;
 import org.societies.android.p2p.entity.Request.RequestType;
 import org.societies.android.p2p.entity.Response;
 import org.societies.android.platform.entity.Entity;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.util.Log;
 
@@ -35,13 +37,14 @@ import android.util.Log;
  * 
  * @author Kato
  */
-class P2PSyncServer extends Thread {
+class P2PSyncServer extends Thread implements UpdateListener {
 	
 	public static final String TAG = "P2PSyncServer";
 	
 	private final P2PConnectionListener mListener;
 	private final Context mContext;
 	private final HandshakeLock mHandshakeLock;
+	private final UpdatePoller mPoller;
 	private PeerList mPeers;
 	private boolean mStopping;
 	
@@ -55,13 +58,16 @@ class P2PSyncServer extends Thread {
 		mListener = listener;
 		
 		mHandshakeLock = new HandshakeLock();
+		mPoller = new UpdatePoller(context, this);
 		mPeers = new PeerList();
 		mStopping = false;
 	}
 
 	@Override
 	public void run() {
-		// TODO: Add UpdatePoller
+		Log.i(TAG, "P2PSyncServer started");
+		
+		mPoller.start();
 		
 		try {
 			while (!mStopping) {
@@ -75,6 +81,25 @@ class P2PSyncServer extends Thread {
 		} catch (IOException e) {
 			Log.e(TAG, e.getMessage(), e);
 		}
+		
+		Log.i(TAG, "P2PSyncServer terminated");
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.societies.android.p2p.UpdatePoller.UpdateListener#onEntitiesAvailable(java.util.Collection)
+	 */
+	public void onEntitiesAvailable(Collection<Entity> entities) {
+		Response response = new Response();
+		response.setEntities(entities);
+		
+		synchronized (mPeers) {
+			for (Peer peer : mPeers) {
+				if (peer.isActive())
+					new UpdateSender(peer, response).start();
+			}
+		}
+		
+		mPoller.resetEntityDirtyFlag(entities, mContext.getContentResolver());
 	}
 	
 	/**
@@ -87,6 +112,8 @@ class P2PSyncServer extends Thread {
 	public void stopServer(boolean awaitTermination)
 			throws InterruptedException {
 		mStopping = true;
+		
+		mPoller.stopPolling();
 		
 		if (awaitTermination && isAlive())
 			join();
@@ -133,8 +160,12 @@ class P2PSyncServer extends Thread {
 		
 		@Override
 		public void run() {
+			Log.i(TAG, "ClientHandler started");
+			
 			try {
 				Request request = mConnection.readRequest();
+				
+				Log.i(TAG, "Handling client: " + request.getUniqueId());
 				
 				if (request.getType() == RequestType.HANDSHAKE)
 					handleHandshake(request);
@@ -154,6 +185,8 @@ class P2PSyncServer extends Thread {
 					mConnection.close();
 				} catch (IOException e) { /* Ignore */ }
 			}
+			
+			Log.i(TAG, "ClientHandler terminated");
 		}
 		
 		/**
@@ -221,8 +254,25 @@ class P2PSyncServer extends Thread {
 		 * @param update The received update.
 		 */
 		private void processUpdate(Collection<Entity> update) {
-			// TODO: INSERT UPDATES (Should the server also be a peer?)
-			// TODO: SET GLOBAL IDs
+			// TODO: SET GLOBAL IDs (must be done client side)
+			// TODO: WHO IS GOING TO SET GLOBAL IDs
+			// TODO: SHOULD ONLY SERVER BE ABLE TO CREATE COMMUNITIES etc.?
+			
+			ContentResolver resolver = mContext.getContentResolver();
+			
+			for (Entity entity : update) {
+				entity.fetchLocalIds(resolver);
+				
+				if (entity.getDeletedFlag() != 0
+						&& entity.getId() != Entity.ENTITY_DEFAULT_ID)
+					entity.delete(resolver);
+				else if (entity.getDeletedFlag() != 0)
+					Log.e(TAG, "Could not delete entity: id = -1");
+				else if (entity.getId() == Entity.ENTITY_DEFAULT_ID)
+					entity.insert(resolver);
+				else
+					entity.update(resolver);
+			}
 		}
 		
 		/**
@@ -274,8 +324,9 @@ class P2PSyncServer extends Thread {
 			
 			try {
 				connection = mPeer.connect();
-				
 				connection.write(mResponse);
+				
+				mPeer.setLastUpdateTimeNow();
 			} catch (InterruptedIOException e) {
 				Log.e(TAG, "Timeout when connecting to client");
 				mPeer.setActive(false);

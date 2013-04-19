@@ -19,6 +19,7 @@ import java.util.Collection;
 
 import org.societies.android.platform.entity.Entity;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.util.Log;
 
@@ -81,6 +82,19 @@ class UpdatePoller extends Thread {
 		}
 		
 		Log.i(TAG, "UpdatePoller terminated");
+	}
+	
+	/**
+	 * Resets the dirty flag of the specified entities.
+	 * @param entities The entities to reset dirty flag of.
+	 * @param resolver The content resolver.
+	 */
+	public void resetEntityDirtyFlag(
+			Collection<Entity> entities, ContentResolver resolver) {
+		for (Entity entity : entities) {
+			entity.setDirtyFlag(0);
+			entity.insert(resolver);
+		}
 	}
 
 	/**
