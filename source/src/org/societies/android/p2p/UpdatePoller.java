@@ -15,11 +15,12 @@
  */
 package org.societies.android.p2p;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.UUID;
 
 import org.societies.android.platform.entity.Entity;
 
-import android.content.ContentResolver;
 import android.content.Context;
 import android.util.Log;
 
@@ -67,10 +68,11 @@ class UpdatePoller extends Thread {
 		
 		try {
 			while (!mStopping) {
-				Collection<Entity> updatedEntities = Entity.getUpdatedEntities(
-						mContext.getContentResolver());
+				Collection<Entity> updatedEntities = processGlobalIds(
+						Entity.getUpdatedEntities(mContext.getContentResolver()));
 				
-				notifyListener(updatedEntities);
+				if (updatedEntities.size() > 0)
+					mListener.onEntitiesAvailable(updatedEntities);
 				
 				Thread.sleep(POLL_INTERVAL);
 			}
@@ -87,25 +89,14 @@ class UpdatePoller extends Thread {
 	/**
 	 * Resets the dirty flag of the specified entities.
 	 * @param entities The entities to reset dirty flag of.
-	 * @param resolver The content resolver.
 	 */
-	public void resetEntityDirtyFlag(
-			Collection<Entity> entities, ContentResolver resolver) {
+	public void resetEntityDirtyFlag(Collection<Entity> entities) {
 		for (Entity entity : entities) {
 			entity.setDirtyFlag(0);
-			entity.insert(resolver);
+			entity.insert(mContext.getContentResolver());
 		}
 	}
 
-	/**
-	 * Notifies the listener of updated entities.
-	 * @param updatedEntities The updated entities.
-	 */
-	private void notifyListener(Collection<Entity> updatedEntities) {
-		if (updatedEntities.size() > 0)
-			mListener.onEntitiesAvailable(updatedEntities);
-	}
-	
 	/**
 	 * Stops the update poller.
 	 */
@@ -114,5 +105,30 @@ class UpdatePoller extends Thread {
 		
 		if (getState() == State.TIMED_WAITING);
 			interrupt();
+	}
+	
+	/**
+	 * Processes the global IDs of the entities, ensuring that all of the are set.
+	 * @param entities The entities to process.
+	 * @return The list of entities that have all global IDs set.
+	 */
+	private Collection<Entity> processGlobalIds(Collection<Entity> entities) {
+		Collection<Entity> processedEntities = new ArrayList<Entity>();
+		
+		for (Entity entity : entities) {
+			entity.fetchGlobalIds(mContext.getContentResolver());
+			
+			if (!Entity.isGlobalIdValid(entity.getGlobalId())) {
+				entity.setGlobalId(UUID.randomUUID().toString());
+				entity.update(mContext.getContentResolver());
+			}
+			
+			if (entity.isAllGlobalIdsSet())
+				processedEntities.add(entity);
+			else
+				Log.i(TAG, "Dropped entity due to lack of global IDs");
+		}
+		
+		return processedEntities;
 	}
 }

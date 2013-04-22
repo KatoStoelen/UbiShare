@@ -117,7 +117,7 @@ class P2PSyncClient extends Thread implements UpdateListener {
 			mUpdateQueue.notify();
 		}
 		
-		mPoller.resetEntityDirtyFlag(entities, mContext.getContentResolver());
+		mPoller.resetEntityDirtyFlag(entities);
 	}
 
 	/**

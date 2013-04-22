@@ -99,7 +99,7 @@ class P2PSyncServer extends Thread implements UpdateListener {
 			}
 		}
 		
-		mPoller.resetEntityDirtyFlag(entities, mContext.getContentResolver());
+		mPoller.resetEntityDirtyFlag(entities);
 	}
 	
 	/**
@@ -195,6 +195,8 @@ class P2PSyncServer extends Thread implements UpdateListener {
 		 * @throws Exception If an error occurs while handling request.
 		 */
 		private void handleHandshake(Request request) throws Exception {
+			Log.i(TAG, "Handshake: " + request.getUniqueId());
+			
 			mHandshakeLock.lock(LockType.HANDSHAKE);
 			
 			Peer peer = null;
@@ -230,6 +232,8 @@ class P2PSyncServer extends Thread implements UpdateListener {
 		 * the lock.
 		 */
 		private void handleClientUpdates(Request request) throws InterruptedException {
+			Log.i(TAG, "Received updates: " + request.getUpdatedEntities().size());
+			
 			mHandshakeLock.lock(LockType.UPDATE);
 			
 			Collection<Entity> update = request.getUpdatedEntities();
@@ -240,7 +244,8 @@ class P2PSyncServer extends Thread implements UpdateListener {
 			
 			synchronized (mPeers) {
 				for (Peer peer : mPeers) {
-					if (peer.isActive())
+					if (peer.isActive() &&
+							!peer.getUniqueId().equals(request.getUniqueId()))
 						new UpdateSender(peer, updateResponse).start();
 				}
 			}
@@ -254,10 +259,6 @@ class P2PSyncServer extends Thread implements UpdateListener {
 		 * @param update The received update.
 		 */
 		private void processUpdate(Collection<Entity> update) {
-			// TODO: SET GLOBAL IDs (must be done client side)
-			// TODO: WHO IS GOING TO SET GLOBAL IDs
-			// TODO: SHOULD ONLY SERVER BE ABLE TO CREATE COMMUNITIES etc.?
-			
 			ContentResolver resolver = mContext.getContentResolver();
 			
 			for (Entity entity : update) {
@@ -323,16 +324,22 @@ class P2PSyncServer extends Thread implements UpdateListener {
 			P2PConnection connection = null;
 			
 			try {
+				mHandshakeLock.lock(LockType.UPDATE);
+				
 				connection = mPeer.connect();
 				connection.write(mResponse);
 				
 				mPeer.setLastUpdateTimeNow();
+				
+				mHandshakeLock.unlock(LockType.UPDATE);
 			} catch (InterruptedIOException e) {
 				Log.e(TAG, "Timeout when connecting to client");
 				mPeer.setActive(false);
 			} catch (IOException e) {
 				Log.e(TAG, e.getMessage(), e);
 				mPeer.setActive(false);
+			} catch (InterruptedException e) {
+				Log.e(TAG, "Interrupted while waiting for lock");
 			} finally {
 				if (connection != null) {
 					try {
