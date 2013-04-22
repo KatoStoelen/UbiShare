@@ -15,25 +15,18 @@
  */
 package org.societies.android.p2p;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.util.UUID;
 
 import org.societies.android.p2p.P2PConnection.ConnectionType;
 
-import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.net.wifi.p2p.WifiP2pConfig;
-import android.net.wifi.p2p.WifiP2pInfo;
-import android.net.wifi.p2p.WifiP2pManager;
-import android.net.wifi.p2p.WifiP2pManager.ActionListener;
-import android.net.wifi.p2p.WifiP2pManager.Channel;
-import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
-import android.util.SparseArray;
+import android.os.IBinder;
 
 /**
  * The P2PSyncManager handles the creation of WiFi Direct groups
@@ -41,7 +34,7 @@ import android.util.SparseArray;
  * 
  * @author Kato
  */
-public class P2PSyncManager {
+public abstract class P2PSyncManager {
 
 	/**
 	 * An enum of P2P interface statuses.
@@ -68,23 +61,13 @@ public class P2PSyncManager {
 		CLIENT
 	}
 	
-	private static final SparseArray<String> errorReasonsWifiDirect;
-	
-	static {
-		errorReasonsWifiDirect = new SparseArray<String>();
-		errorReasonsWifiDirect.append(WifiP2pManager.ERROR, "INTERNAL ERROR");
-		errorReasonsWifiDirect.append(WifiP2pManager.P2P_UNSUPPORTED, "P2P_UNSUPPORTED");
-		errorReasonsWifiDirect.append(WifiP2pManager.BUSY, "BUSY");
-	}
-	
-	private ConnectionType mConnectionType;
-	private WifiP2pManager mWifiP2pManager;
 	private IntentFilter mIntentFilter;
-	private Context mContext;
 	private BroadcastReceiver mBroadcastReceiver;
-	private Channel mChannel;
+	private ServiceConnection mServiceConnection;
+	protected Context mContext;
 	
-	private final IP2PListener mP2pListener;
+	private final ConnectionType mConnectionType;
+	protected final IP2PListener mP2pListener;
 	
 	/**
 	 * Initializes a new P2P Sync Manager.
@@ -93,50 +76,47 @@ public class P2PSyncManager {
 	 * @param p2pListener The P2P listener.
 	 */
 	public P2PSyncManager(
-			Context context, ConnectionType connectionType, IP2PListener p2pListener) {
+			Context context,
+			ConnectionType connectionType,
+			IP2PListener p2pListener) {
 		mContext = context;
 		mConnectionType = connectionType;
-		mIntentFilter = getIntentFilter(connectionType);
-		mBroadcastReceiver = getBroadcastReceiver(connectionType);
-		mWifiP2pManager = (WifiP2pManager) context.getSystemService(Context.WIFI_P2P_SERVICE);
+		mIntentFilter = getIntentFilter();
+		mBroadcastReceiver = getBroadcastReceiver();
+		mServiceConnection = getServiceConnection();
+		
 		mP2pListener = p2pListener;
-		mChannel = mWifiP2pManager.initialize(context, context.getMainLooper(), null);
+	}
+	
+	/**
+	 * Gets the service connection.
+	 * @return The service connection.
+	 */
+	private ServiceConnection getServiceConnection() {
+		return new ServiceConnection() {
+			public void onServiceDisconnected(ComponentName name) { }
+			public void onServiceConnected(ComponentName name, IBinder service) {
+				LocalServiceBinder localBinder = (LocalServiceBinder) service;
+				
+				ISyncService syncService = localBinder.getService();
+				syncService.stopSync(true);
+				
+				mContext.unbindService(this);
+			}
+		};
 	}
 	
 	/**
 	 * Gets the broadcast receiver of the specified connection type.
-	 * @param connectionType The connection type in use.
 	 * @return A broadcast receiver.
 	 */
-	private BroadcastReceiver getBroadcastReceiver(ConnectionType connectionType) {
-		if (connectionType == ConnectionType.BLUETOOTH)
-			return new BluetoothBroadcastReceiver();
-		else if (connectionType == ConnectionType.WIFI_DIRECT)
-			return new WiFiDirectBroadcastReceiver(
-					mP2pListener, mConnectionListener, mWifiP2pManager, mChannel);
-		else
-			return null;
-	}
+	protected abstract BroadcastReceiver getBroadcastReceiver();
 
 	/**
 	 * Gets the intent filter of the specified connection type.
-	 * @param connectionType The connection type in use.
 	 * @return An intent filter.
 	 */
-	private IntentFilter getIntentFilter(ConnectionType connectionType) {
-		IntentFilter filter = new IntentFilter();
-		
-		if (connectionType == ConnectionType.BLUETOOTH) {
-			filter.addAction(BluetoothDevice.ACTION_FOUND);
-		} else if (connectionType == ConnectionType.WIFI_DIRECT) {
-			filter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-			filter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-			filter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-			filter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
-		}
-		
-		return filter;
-	}
+	protected abstract IntentFilter getIntentFilter();
 	
 	/**
 	 * Registers a broadcast receiver to be called with the connection specific
@@ -156,85 +136,28 @@ public class P2PSyncManager {
 	/**
 	 * Starts the discovering of peers. This is an asynchronous call.
 	 */
-	public void discoverPeers() {
-		if (mConnectionType == ConnectionType.WIFI_DIRECT)
-			discoverPeersWifiDirect();
-		else if (mConnectionType == ConnectionType.BLUETOOTH)
-			discoverPeersBluetooth();
-	}
-	
-	/**
-	 * Starts the discovering of peers using WiFi Direct.
-	 */
-	private void discoverPeersWifiDirect() {
-		mWifiP2pManager.discoverPeers(mChannel, new ActionListener() {
-			
-			public void onSuccess() { /* Deliberately empty */ }
-
-			public void onFailure(int reason) {
-				mP2pListener.onDiscoverPeersFailure(
-						errorReasonsWifiDirect.get(reason), ConnectionType.WIFI_DIRECT);
-			}
-		});
-	}
-	
-	/**
-	 * Starts the discovering of peers using Bluetooth.
-	 */
-	private void discoverPeersBluetooth() {
-		// TODO: IMPLEMENT
-	}
+	public abstract void discoverPeers();
 	
 	/**
 	 * Starts the connection to the specified device. This is an asynchronous call.
 	 * @param device The device to connect to.
 	 */
-	public void connectTo(P2PDevice device) {
-		if (device instanceof WiFiDirectP2PDevice)
-			connectToWifiDirectDevice((WiFiDirectP2PDevice) device);
-		else if (device instanceof BluetoothP2PDevice)
-			connectToBluetoothDevice((BluetoothP2PDevice) device);
-	}
+	public abstract void connectTo(P2PDevice device);
 	
 	/**
-	 * Starts the connection to the specified WiFi Direct device.
-	 * @param device The device to connect to.
+	 * Gets the connection listener used to accept incoming connections when
+	 * acting as a sync server.
+	 * @return The connection listener of the sync server.
 	 */
-	private void connectToWifiDirectDevice(WiFiDirectP2PDevice device) {
-		WifiP2pConfig config = new WifiP2pConfig();
-		config.deviceAddress = device.getAddress();
-		
-		mWifiP2pManager.connect(mChannel, config, new ActionListener() {
-			
-			public void onSuccess() { /* Deliberately empty */ }
-			
-			public void onFailure(int reason) {
-				mP2pListener.onConnectFailure(
-						errorReasonsWifiDirect.get(reason), ConnectionType.WIFI_DIRECT);
-			}
-		});
-	}
-	
-	/**
-	 * Starts the connection to the specified Bluetooth device.
-	 * @param device The device to connect to.
-	 */
-	private void connectToBluetoothDevice(BluetoothP2PDevice device) {
-		// TODO: IMPLEMENT
-	}
+	protected abstract P2PConnectionListener getServerConnectionListener();
 	
 	/**
 	 * Starts the sync server.
 	 */
-	private void startSyncServer(ConnectionType connectionType) {
+	protected void startSyncServer() {
 		stopSync(true);
 		
-		P2PConnectionListener listener = null;
-		if (connectionType == ConnectionType.WIFI_DIRECT)
-			listener = new WiFiDirectConnectionListener(
-					P2PConstants.WIFI_DIRECT_SERVER_PORT);
-		else if (connectionType == ConnectionType.BLUETOOTH)
-			listener = new BluetoothConnectionListener();
+		P2PConnectionListener listener = getServerConnectionListener();
 		
 		Intent intent = new Intent(mContext, P2PSyncServerService.class);
 		intent.putExtra(
@@ -245,30 +168,10 @@ public class P2PSyncManager {
 	}
 	
 	/**
-	 * Starts the sync client using WiFi Direct.
-	 * @param groupOwnerAddress The address of the group owner.
-	 */
-	private void startWifiDirectSyncClient(InetSocketAddress groupOwnerAddress) {
-		stopSync(true);
-		
-		Intent intent = new Intent(mContext, P2PSyncClientService.class);
-		intent.putExtra(
-				P2PSyncClientService.EXTRA_CONNECTION,
-				new WiFiDirectConnection(groupOwnerAddress));
-		intent.putExtra(
-				P2PSyncClientService.EXTRA_LISTENER,
-				new WiFiDirectConnectionListener(
-						P2PConstants.WIFI_DIRECT_CLIENT_PORT));
-		intent.putExtra(P2PSyncClientService.EXTRA_UNIQUE_ID, getUniqueId());
-		
-		mContext.startService(intent);
-	}
-	
-	/**
 	 * Gets a unique ID that can be used to identify a client.
 	 * @return A string containing a unique ID.
 	 */
-	private String getUniqueId() {
+	protected String getUniqueId() {
 		SharedPreferences preferences =
 				mContext.getSharedPreferences(
 						P2PConstants.PREFERENCE_FILE, Context.MODE_PRIVATE);
@@ -292,26 +195,28 @@ public class P2PSyncManager {
 	 * synchronization has terminated.
 	 */
 	public void stopSync(boolean awaitTermination) {
-		// TODO: IMPLEMENT
-	}
-	
-	private final ConnectionInfoListener mConnectionListener = new ConnectionInfoListener() {
-		public void onConnectionInfoAvailable(WifiP2pInfo info) {
-			if (info.groupFormed && info.isGroupOwner) {
-				startSyncServer(ConnectionType.WIFI_DIRECT);
-				
-				mP2pListener.onSuccessfulConnection(
-						SyncRole.SERVER, ConnectionType.WIFI_DIRECT);
-			} else if (info.groupFormed) {
-				InetAddress groupOwnerAddress = info.groupOwnerAddress;
-				InetSocketAddress socketAddress = new InetSocketAddress(
-						groupOwnerAddress, P2PConstants.WIFI_DIRECT_SERVER_PORT);
-				
-				startWifiDirectSyncClient(socketAddress);
-				
-				mP2pListener.onSuccessfulConnection(
-						SyncRole.CLIENT, ConnectionType.WIFI_DIRECT);
-			}
+		// TODO: Figure out awaitTermination (wait() / notify())
+		
+		if (P2PSyncClientService.IS_RUNNING) {
+			mContext.bindService(
+					new Intent(mContext, P2PSyncClientService.class),
+					mServiceConnection,
+					0);
 		}
-	};
+		
+		if (P2PSyncServerService.IS_RUNNING) {
+			mContext.bindService(
+					new Intent(mContext, P2PSyncServerService.class),
+					mServiceConnection,
+					0);
+		}
+	}
+
+	/**
+	 * Gets the connection type currently being used.
+	 * @return The connection type in use.
+	 */
+	public ConnectionType getConnectionType() {
+		return mConnectionType;
+	}
 }

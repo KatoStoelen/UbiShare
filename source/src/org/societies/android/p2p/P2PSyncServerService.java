@@ -17,7 +17,6 @@ package org.societies.android.p2p;
 
 import android.app.Service;
 import android.content.Intent;
-import android.os.Binder;
 import android.os.IBinder;
 
 /**
@@ -25,12 +24,15 @@ import android.os.IBinder;
  * 
  * @author Kato
  */
-class P2PSyncServerService extends Service {
+class P2PSyncServerService extends Service implements ISyncService {
 	
 	/** The connection listener. */
 	public static final String EXTRA_CONNECTION_LISTENER = "connection_listener";
 	
-	private final IBinder mBinder = new SyncServerBinder();
+	/** Whether or not the service is running. */
+	public static boolean IS_RUNNING = false;
+	
+	private final IBinder mBinder = new LocalServiceBinder(this);
 	private P2PSyncServer mSyncServer;
 	
 	@Override
@@ -44,6 +46,8 @@ class P2PSyncServerService extends Service {
 			mSyncServer.start();
 		}
 		
+		IS_RUNNING = true;
+		
 		return START_STICKY;
 	}
 
@@ -56,31 +60,19 @@ class P2PSyncServerService extends Service {
 	public void onDestroy() {
 		super.onDestroy();
 		
-		stopSyncServer(true);
+		stopSync(true);
+		
+		IS_RUNNING = false;
 	}
-	
-	/**
-	 * Stops the sync server.
-	 * @param awaitTermination Whether or not to block until the sync server
-	 * has terminated.
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.societies.android.p2p.ISyncService#stopSync(boolean)
 	 */
-	public void stopSyncServer(boolean awaitTermination) {
+	public void stopSync(boolean awaitTermination) {
 		try {
 			if (mSyncServer != null)
 				mSyncServer.stopServer(awaitTermination);
 		} catch (InterruptedException e) { /* Ignore */ }
-	}
-	
-	/**
-	 * Custom binder used to obtain service object reference.
-	 */
-	public class SyncServerBinder extends Binder {
-		/**
-		 * Gets the service object.
-		 * @return The service object.
-		 */
-		public P2PSyncServerService getService() {
-			return P2PSyncServerService.this;
-		}
 	}
 }

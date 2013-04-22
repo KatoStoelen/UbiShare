@@ -17,7 +17,6 @@ package org.societies.android.p2p;
 
 import android.app.Service;
 import android.content.Intent;
-import android.os.Binder;
 import android.os.IBinder;
 
 /**
@@ -25,7 +24,7 @@ import android.os.IBinder;
  * 
  * @author Kato
  */
-class P2PSyncClientService extends Service {
+class P2PSyncClientService extends Service implements ISyncService {
 	
 	/** Name of the P2P connection extra. */
 	public static final String EXTRA_CONNECTION = "extra_connection";
@@ -34,7 +33,10 @@ class P2PSyncClientService extends Service {
 	/** Name of the unique ID extra. */
 	public static final String EXTRA_UNIQUE_ID = "extra_unique_id";
 	
-	private final IBinder mBinder = new SyncClientBinder();
+	/** Whether or not the service is running. */
+	public static boolean IS_RUNNING = false;
+	
+	private final IBinder mBinder = new LocalServiceBinder(this);
 	private P2PSyncClient mSyncClient;
 	
 	@Override
@@ -50,6 +52,8 @@ class P2PSyncClientService extends Service {
 			mSyncClient.start();
 		}
 		
+		IS_RUNNING = true;
+		
 		return START_STICKY;
 	}
 
@@ -62,31 +66,18 @@ class P2PSyncClientService extends Service {
 	public void onDestroy() {
 		super.onDestroy();
 		
-		stopSyncClient(true);
+		stopSync(true);
+		
+		IS_RUNNING = false;
 	}
 	
-	/**
-	 * Stops the sync client.
-	 * @param awaitTermination Whether or not to block until sync client
-	 * has terminated.
+	/* (non-Javadoc)
+	 * @see org.societies.android.p2p.ISyncService#stopSync(boolean)
 	 */
-	public void stopSyncClient(boolean awaitTermination) {
+	public void stopSync(boolean awaitTermination) {
 		try {
 			if (mSyncClient != null)
 				mSyncClient.stopSyncClient(awaitTermination);
 		} catch (InterruptedException e) { /* Ignore */ }
-	}
-	
-	/**
-	 * Custom binder used to obtain service object reference.
-	 */
-	public class SyncClientBinder extends Binder {
-		/**
-		 * Gets the service object.
-		 * @return The service object.
-		 */
-		public P2PSyncClientService getService() {
-			return P2PSyncClientService.this;
-		}
 	}
 }

@@ -88,6 +88,15 @@
                 android:name="android.content.SyncAdapter"
                 android:resource="@xml/box_sync" />
         </service>
+        
+        <service
+            android:name="org.societies.android.p2p.P2PSyncClientService"
+            android:exported="false" >
+        </service>
+        <service
+            android:name="org.societies.android.p2p.P2PSyncServerService"
+            android:exported="false" >
+        </service>
 
         <provider
             android:name="org.societies.android.platform.SocialProvider"
