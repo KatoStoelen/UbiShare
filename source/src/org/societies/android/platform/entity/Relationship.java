@@ -233,4 +233,11 @@ public class Relationship extends Entity {
 	public void setGlobalIdP2(String globalIdP2) {
 		this.globalIdP2 = globalIdP2;
 	}
+
+	@Override
+	public boolean isAllGlobalIdsSet() {
+		return isGlobalIdValid(globalId) &&
+				isGlobalIdValid(globalIdP1) &&
+				isGlobalIdValid(globalIdP2);
+	}
 }

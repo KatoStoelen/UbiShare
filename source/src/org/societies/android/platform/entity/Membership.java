@@ -237,4 +237,11 @@ public class Membership extends Entity {
 	public void setGlobalIdCommunity(String globalIdCommunity) {
 		this.globalIdCommunity = globalIdCommunity;
 	}
+
+	@Override
+	public boolean isAllGlobalIdsSet() {
+		return isGlobalIdValid(globalId) &&
+				isGlobalIdValid(globalIdCommunity) &&
+				isGlobalIdValid(globalIdMember);
+	}
 }

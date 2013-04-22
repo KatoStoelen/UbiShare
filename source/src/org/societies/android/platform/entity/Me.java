@@ -160,4 +160,9 @@ public class Me extends Entity {
 	public void setLastModifiedDate(long lastModifiedDate) {
 		this.lastModifiedDate = lastModifiedDate;
 	}
+
+	@Override
+	public boolean isAllGlobalIdsSet() {
+		return true; /* Not used */
+	}
 }

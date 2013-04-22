@@ -200,4 +200,9 @@ public class Person extends Entity {
 	public void setUserName(String userName) {
 		this.userName = userName;
 	}
+
+	@Override
+	public boolean isAllGlobalIdsSet() {
+		return isGlobalIdValid(globalId);
+	}
 }

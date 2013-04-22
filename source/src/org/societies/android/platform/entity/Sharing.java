@@ -270,4 +270,12 @@ public class Sharing extends Entity {
 	public void setGlobalIdCommunity(String globalIdCommunity) {
 		this.globalIdCommunity = globalIdCommunity;
 	}
+
+	@Override
+	public boolean isAllGlobalIdsSet() {
+		return isGlobalIdValid(globalId) &&
+				isGlobalIdValid(globalIdCommunity) &&
+				isGlobalIdValid(globalIdOwner) &&
+				isGlobalIdValid(globalIdService);
+	}
 }

@@ -18,6 +18,8 @@ package org.societies.android.platform.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.societies.android.api.cis.SocialContract;
+
 import static org.societies.android.api.cis.SocialContract.SyncColumns.*;
 
 import com.google.renamedgson.Gson;
@@ -187,13 +189,13 @@ public abstract class Entity {
 	public static List<Entity> getUpdatedEntities(ContentResolver resolver) throws Exception {
 		List<Entity> updatedEntities = new ArrayList<Entity>();
 		
-		updatedEntities.addAll(Community.getUpdatedCommunities(resolver));
-		updatedEntities.addAll(CommunityActivity.getUpdatedCommunityActivities(resolver));
-		updatedEntities.addAll(Membership.getUpdatedMemberships(resolver));
 		updatedEntities.addAll(Person.getUpdatedPeople(resolver));
-		updatedEntities.addAll(PersonActivity.getUpdatedPersonActivities(resolver));
-		updatedEntities.addAll(Relationship.getUpdatedRelationships(resolver));
+		updatedEntities.addAll(Community.getUpdatedCommunities(resolver));
 		updatedEntities.addAll(Service.getUpdatedServices(resolver));
+		updatedEntities.addAll(Membership.getUpdatedMemberships(resolver));
+		updatedEntities.addAll(Relationship.getUpdatedRelationships(resolver));
+		updatedEntities.addAll(CommunityActivity.getUpdatedCommunityActivities(resolver));
+		updatedEntities.addAll(PersonActivity.getUpdatedPersonActivities(resolver));
 		updatedEntities.addAll(ServiceActivity.getUpdatedServiceActivities(resolver));
 		updatedEntities.addAll(Sharing.getUpdatedSharings(resolver));
 		
@@ -211,13 +213,13 @@ public abstract class Entity {
 	public static List<Entity> getAllEntities(ContentResolver resolver) throws Exception {
 		List<Entity> entities = new ArrayList<Entity>();
 		
-		entities.addAll(Community.getAllCommunities(resolver));
-		entities.addAll(CommunityActivity.getAllCommunityActivities(resolver));
-		entities.addAll(Membership.getAllMemberships(resolver));
 		entities.addAll(Person.getAllPeople(resolver));
-		entities.addAll(PersonActivity.getAllPersonActivities(resolver));
-		entities.addAll(Relationship.getAllRelationships(resolver));
+		entities.addAll(Community.getAllCommunities(resolver));
 		entities.addAll(Service.getAllServices(resolver));
+		entities.addAll(Membership.getAllMemberships(resolver));
+		entities.addAll(Relationship.getAllRelationships(resolver));
+		entities.addAll(CommunityActivity.getAllCommunityActivities(resolver));
+		entities.addAll(PersonActivity.getAllPersonActivities(resolver));
 		entities.addAll(ServiceActivity.getAllServiceActivities(resolver));
 		entities.addAll(Sharing.getAllSharings(resolver));
 		
@@ -395,6 +397,18 @@ public abstract class Entity {
 	protected abstract Uri getContentUri();
 	
 	/**
+	 * Checks whether or not the specified global ID is valid.
+	 * @param globalId The global ID to validate.
+	 * @return <code>true</code> if the global ID is valid, otherwise
+	 * <code>false</code>.
+	 */
+	protected boolean isGlobalIdValid(String globalId) {
+		return (globalId != null &&
+				globalId.length() > 0 &&
+				!globalId.equals(SocialContract.GLOBAL_ID_PENDING));
+	}
+	
+	/**
 	 * Inserts the entity into the database.
 	 * @param resolver The content resolver.
 	 * @return The URL to the newly inserted entity.
@@ -504,6 +518,13 @@ public abstract class Entity {
 	 * @param globalId The global ID of the entity.
 	 */
 	public abstract void setGlobalId(String globalId);
+	
+	/**
+	 * Gets whether or not all the global IDs of the entity is set.
+	 * @return <code>true</code> if all global IDs are set, otherwise
+	 * <code>false</code>.
+	 */
+	public abstract boolean isAllGlobalIdsSet();
 
 	/**
 	 * Gets the account type of the entity.

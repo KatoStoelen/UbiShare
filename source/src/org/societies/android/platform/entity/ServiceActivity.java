@@ -234,4 +234,10 @@ public class ServiceActivity extends Entity {
 	public void setGlobalIdFeedOwner(String globalIdFeedOwner) {
 		this.globalIdFeedOwner = globalIdFeedOwner;
 	}
+
+	@Override
+	public boolean isAllGlobalIdsSet() {
+		return isGlobalIdValid(globalId) &&
+				isGlobalIdValid(globalIdFeedOwner);
+	}
 }

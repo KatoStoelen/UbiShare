@@ -248,4 +248,10 @@ public class Community extends Entity {
 	public void setGlobalIdOwner(String globalIdOwner) {
 		this.globalIdOwner = globalIdOwner;
 	}
+
+	@Override
+	public boolean isAllGlobalIdsSet() {
+		return isGlobalIdValid(globalId) &&
+				isGlobalIdValid(globalIdOwner);
+	}
 }
