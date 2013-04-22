@@ -131,7 +131,7 @@ public class PersonActivity extends Entity {
 	}
 	
 	@Override
-	protected void fetchGlobalIds(ContentResolver resolver) {
+	public void fetchGlobalIds(ContentResolver resolver) {
 		setGlobalIdFeedOwner(
 				Entity.getGlobalId(
 						People.CONTENT_URI,

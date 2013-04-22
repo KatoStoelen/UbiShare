@@ -127,7 +127,7 @@ public class Membership extends Entity {
 	}
 	
 	@Override
-	protected void fetchGlobalIds(ContentResolver resolver) {
+	public void fetchGlobalIds(ContentResolver resolver) {
 		setGlobalIdCommunity(
 				Entity.getGlobalId(
 						Communities.CONTENT_URI,

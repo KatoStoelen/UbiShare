@@ -124,7 +124,7 @@ public class Person extends Entity {
 	}
 	
 	@Override
-	protected void fetchGlobalIds(ContentResolver resolver) {
+	public void fetchGlobalIds(ContentResolver resolver) {
 		// Deliberately empty
 	}
 	

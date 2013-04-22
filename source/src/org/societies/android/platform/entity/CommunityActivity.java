@@ -130,7 +130,7 @@ public class CommunityActivity extends Entity {
 	}
 	
 	@Override
-	protected void fetchGlobalIds(ContentResolver resolver) {
+	public void fetchGlobalIds(ContentResolver resolver) {
 		setGlobalIdFeedOwner(
 				Entity.getGlobalId(
 						Communities.CONTENT_URI,

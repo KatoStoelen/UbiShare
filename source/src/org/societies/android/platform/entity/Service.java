@@ -143,7 +143,7 @@ public class Service extends Entity {
 	}
 	
 	@Override
-	protected void fetchGlobalIds(ContentResolver resolver) {
+	public void fetchGlobalIds(ContentResolver resolver) {
 		setGlobalIdOwner(
 				Entity.getGlobalId(
 						People.CONTENT_URI,

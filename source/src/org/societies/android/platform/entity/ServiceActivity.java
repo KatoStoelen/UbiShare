@@ -131,7 +131,7 @@ public class ServiceActivity extends Entity {
 	}
 	
 	@Override
-	protected void fetchGlobalIds(ContentResolver resolver) {
+	public void fetchGlobalIds(ContentResolver resolver) {
 		setGlobalIdFeedOwner(
 				Entity.getGlobalId(
 						Services.CONTENT_URI,

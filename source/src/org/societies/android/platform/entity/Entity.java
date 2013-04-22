@@ -227,6 +227,18 @@ public abstract class Entity {
 	}
 	
 	/**
+	 * Checks whether or not the specified global ID is valid.
+	 * @param globalId The global ID to validate.
+	 * @return <code>true</code> if the global ID is valid, otherwise
+	 * <code>false</code>.
+	 */
+	public static boolean isGlobalIdValid(String globalId) {
+		return (globalId != null &&
+				globalId.length() > 0 &&
+				!globalId.equals(SocialContract.GLOBAL_ID_PENDING));
+	}
+	
+	/**
 	 * Prepares the selection clause of a query.
 	 * @param selection The selection.
 	 * @return The prepared selection.
@@ -397,18 +409,6 @@ public abstract class Entity {
 	protected abstract Uri getContentUri();
 	
 	/**
-	 * Checks whether or not the specified global ID is valid.
-	 * @param globalId The global ID to validate.
-	 * @return <code>true</code> if the global ID is valid, otherwise
-	 * <code>false</code>.
-	 */
-	protected boolean isGlobalIdValid(String globalId) {
-		return (globalId != null &&
-				globalId.length() > 0 &&
-				!globalId.equals(SocialContract.GLOBAL_ID_PENDING));
-	}
-	
-	/**
 	 * Inserts the entity into the database.
 	 * @param resolver The content resolver.
 	 * @return The URL to the newly inserted entity.
@@ -497,7 +497,7 @@ public abstract class Entity {
 	 * Fetches any global IDs used as foreign keys while synchronizing.
 	 * @param resolver The content resolver.
 	 */
-	protected abstract void fetchGlobalIds(ContentResolver resolver);
+	public abstract void fetchGlobalIds(ContentResolver resolver);
 	
 	/**
 	 * Fetches the local IDs of the entity from the database. If the entity

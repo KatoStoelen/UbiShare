@@ -126,7 +126,7 @@ public class Relationship extends Entity {
 	}
 	
 	@Override
-	protected void fetchGlobalIds(ContentResolver resolver) {
+	public void fetchGlobalIds(ContentResolver resolver) {
 		setGlobalIdP1(
 				Entity.getGlobalId(
 						People.CONTENT_URI,
