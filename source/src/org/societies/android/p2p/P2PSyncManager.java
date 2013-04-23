@@ -72,25 +72,25 @@ public abstract class P2PSyncManager {
 	private ServiceConnection mServiceConnection;
 	
 	protected Context mContext;
-	protected final IP2PListener mP2pListener;
+	protected final IP2PChangeListener mChangeListener;
 	
 	/**
 	 * Initializes a new P2P Sync Manager.
 	 * @param context The context to use.
 	 * @param connectionType The type of connection to use.
-	 * @param p2pListener The P2P listener.
+	 * @param changeListener The listener to notify of P2P changes.
 	 */
 	protected P2PSyncManager(
 			Context context,
 			ConnectionType connectionType,
-			IP2PListener p2pListener) {
+			IP2PChangeListener changeListener) {
 		mContext = context;
 		mConnectionType = connectionType;
 		mIntentFilter = getIntentFilter();
 		mBroadcastReceiver = getBroadcastReceiver();
 		mServiceConnection = getServiceConnection();
 		
-		mP2pListener = p2pListener;
+		mChangeListener = changeListener;
 	}
 	
 	/**
@@ -248,7 +248,7 @@ public abstract class P2PSyncManager {
 	 */
 	public static P2PSyncManager getSyncManager(
 			Context context,
-			IP2PListener listener,
+			IP2PChangeListener listener,
 			ConnectionType connectionType) {
 		if (connectionType == ConnectionType.WIFI_DIRECT)
 			return new WiFiDirectSyncManager(context, listener);

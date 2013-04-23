@@ -18,7 +18,6 @@ package org.societies.android.p2p;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.societies.android.p2p.P2PConnection.ConnectionType;
 import org.societies.android.p2p.P2PSyncManager.P2PInterfaceStatus;
 
 import android.content.BroadcastReceiver;
@@ -29,7 +28,6 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
-import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
 
 /**
@@ -39,26 +37,22 @@ import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
  */
 class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
 	
-	private IP2PListener mP2pListener;
-	private WifiP2pManager mManager;
-	private ConnectionInfoListener mConnectionListener;
+	private WiFiDirectSyncManager mSyncManager;
+	private WifiP2pManager mWifiP2pManager;
 	private Channel mChannel;
 	
 	/**
 	 * Initializes a new WiFi Direct broadcast receiver.
-	 * @param p2pListener The P2P listener.
-	 * @param connectionListener The connection listener.
-	 * @param manager The WifiP2pManager instance.
+	 * @param syncManager The WiFi Direct sync manager.
+	 * @param wifiP2pManager The WifiP2pManager instance.
 	 * @param channel The channel instance.
 	 */
 	public WiFiDirectBroadcastReceiver(
-			IP2PListener p2pListener,
-			ConnectionInfoListener connectionListener,
-			WifiP2pManager manager,
+			WiFiDirectSyncManager syncManager,
+			WifiP2pManager wifiP2pManager,
 			Channel channel) {
-		mP2pListener = p2pListener;
-		mConnectionListener = connectionListener;
-		mManager = manager;
+		mSyncManager = syncManager;
+		mWifiP2pManager = wifiP2pManager;
 		mChannel = channel;
 	}
 
@@ -70,29 +64,27 @@ class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
 			int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
 			
 	        if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED)
-	        	mP2pListener.onP2pInterfaceStatusChange(
-	        			P2PInterfaceStatus.ON, ConnectionType.WIFI_DIRECT);
+	        	mSyncManager.notifyP2pInterfaceStatusChange(P2PInterfaceStatus.ON);
 	        else
-	        	mP2pListener.onP2pInterfaceStatusChange(
-	        			P2PInterfaceStatus.OFF, ConnectionType.WIFI_DIRECT);
+	        	mSyncManager.notifyP2pInterfaceStatusChange(P2PInterfaceStatus.OFF);
 		} else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
-			if (mManager != null)
-				mManager.requestPeers(mChannel, mPeerListListener);
+			if (mWifiP2pManager != null)
+				mWifiP2pManager.requestPeers(mChannel, mPeerListListener);
 		} else if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
-			if (mManager == null)
+			if (mWifiP2pManager == null)
                 return;
 
             NetworkInfo networkInfo = (NetworkInfo) intent.getParcelableExtra(
             		WifiP2pManager.EXTRA_NETWORK_INFO);
 
             if (networkInfo.isConnected())
-                mManager.requestConnectionInfo(mChannel, mConnectionListener);
+                mWifiP2pManager.requestConnectionInfo(mChannel, mSyncManager);
 		} else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
 			WifiP2pDevice wifiDevice = (WifiP2pDevice) intent.getParcelableExtra(
                     WifiP2pManager.EXTRA_WIFI_P2P_DEVICE);
 			
-			mP2pListener.onThisDeviceChange(
-					new WiFiDirectP2PDevice(wifiDevice), ConnectionType.WIFI_DIRECT);
+			mSyncManager.notifyThisDeviceStatusChange(
+					new WiFiDirectP2PDevice(wifiDevice));
 		}
 	}
 	
@@ -106,7 +98,7 @@ class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
 			for (WifiP2pDevice device : peers.getDeviceList())
 				devices.add(new WiFiDirectP2PDevice(device));
 			
-			mP2pListener.onPeersAvailable(devices, true, ConnectionType.WIFI_DIRECT);
+			mSyncManager.notifyPeersAvailable(devices);
 		}
 	};
 }

@@ -17,6 +17,7 @@ package org.societies.android.p2p;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.List;
 
 import org.societies.android.p2p.P2PConnection.ConnectionType;
 
@@ -38,7 +39,7 @@ import android.util.SparseArray;
  * 
  * @author Kato
  */
-class WiFiDirectSyncManager extends P2PSyncManager {
+class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoListener {
 	
 	public static final String TAG = "WiFiDirectSyncManager";
 	
@@ -62,7 +63,7 @@ class WiFiDirectSyncManager extends P2PSyncManager {
 	 * @param context The context to use.
 	 * @param p2pListener The listener to notify of P2P changes.
 	 */
-	public WiFiDirectSyncManager(Context context, IP2PListener p2pListener) {
+	public WiFiDirectSyncManager(Context context, IP2PChangeListener p2pListener) {
 		super(context, ConnectionType.WIFI_DIRECT, p2pListener);
 		
 		mWifiP2pManager = (WifiP2pManager) context.getSystemService(Context.WIFI_P2P_SERVICE);
@@ -96,8 +97,7 @@ class WiFiDirectSyncManager extends P2PSyncManager {
 
 	@Override
 	protected BroadcastReceiver getBroadcastReceiver() {
-		return new WiFiDirectBroadcastReceiver(
-				mP2pListener, mConnectionListener, mWifiP2pManager, mChannel);
+		return new WiFiDirectBroadcastReceiver(this, mWifiP2pManager, mChannel);
 	}
 
 	@Override
@@ -118,9 +118,9 @@ class WiFiDirectSyncManager extends P2PSyncManager {
 			public void onSuccess() { /* Deliberately empty */ }
 
 			public void onFailure(int reason) {
-				mP2pListener.onDiscoverPeersFailure(
+				mChangeListener.onDiscoverPeersFailure(
 						errorMessagesWifiDirect.get(reason),
-						ConnectionType.WIFI_DIRECT);
+						WiFiDirectSyncManager.this);
 			}
 		});
 	}
@@ -134,11 +134,35 @@ class WiFiDirectSyncManager extends P2PSyncManager {
 			public void onSuccess() { /* Deliberately empty */ }
 			
 			public void onFailure(int reason) {
-				mP2pListener.onConnectFailure(
+				mChangeListener.onConnectFailure(
 						errorMessagesWifiDirect.get(reason),
-						ConnectionType.WIFI_DIRECT);
+						WiFiDirectSyncManager.this);
 			}
 		});
+	}
+	
+	/**
+	 * Notifies the listener of P2P interface status change.
+	 * @param status The state of the P2P interface.
+	 */
+	public void notifyP2pInterfaceStatusChange(P2PInterfaceStatus status) {
+		mChangeListener.onP2pInterfaceStatusChange(status, this);
+	}
+	
+	/**
+	 * Notifies the listener of status changes of this device.
+	 * @param device The new device status.
+	 */
+	public void notifyThisDeviceStatusChange(WiFiDirectP2PDevice device) {
+		mChangeListener.onThisDeviceChange(device, this);
+	}
+	
+	/**
+	 * Notifies the listener of available peers.
+	 * @param peers The available peers.
+	 */
+	public void notifyPeersAvailable(List<P2PDevice> peers) {
+		mChangeListener.onPeersAvailable(peers, true, this);
 	}
 
 	@Override
@@ -147,28 +171,23 @@ class WiFiDirectSyncManager extends P2PSyncManager {
 				P2PConstants.WIFI_DIRECT_SERVER_PORT);
 	}
 	
-	/**
-	 * Listener handling notifications regarding the creation of a
-	 * WiFi Direct group.
+	/*
+	 * (non-Javadoc)
+	 * @see android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener#onConnectionInfoAvailable(android.net.wifi.p2p.WifiP2pInfo)
 	 */
-	private final ConnectionInfoListener mConnectionListener =
-			new ConnectionInfoListener() {
-		public void onConnectionInfoAvailable(WifiP2pInfo info) {
-			if (info.groupFormed && info.isGroupOwner) {
-				startSyncServer();
-				
-				mP2pListener.onSuccessfulConnection(
-						SyncRole.SERVER, ConnectionType.WIFI_DIRECT);
-			} else if (info.groupFormed) {
-				InetAddress groupOwnerAddress = info.groupOwnerAddress;
-				InetSocketAddress socketAddress = new InetSocketAddress(
-						groupOwnerAddress, P2PConstants.WIFI_DIRECT_SERVER_PORT);
-				
-				startSyncClient(socketAddress);
-				
-				mP2pListener.onSuccessfulConnection(
-						SyncRole.CLIENT, ConnectionType.WIFI_DIRECT);
-			}
+	public void onConnectionInfoAvailable(WifiP2pInfo info) {
+		if (info.groupFormed && info.isGroupOwner) {
+			startSyncServer();
+			
+			mChangeListener.onSuccessfulConnection(SyncRole.SERVER, this);
+		} else if (info.groupFormed) {
+			InetAddress groupOwnerAddress = info.groupOwnerAddress;
+			InetSocketAddress socketAddress = new InetSocketAddress(
+					groupOwnerAddress, P2PConstants.WIFI_DIRECT_SERVER_PORT);
+			
+			startSyncClient(socketAddress);
+			
+			mChangeListener.onSuccessfulConnection(SyncRole.CLIENT, this);
 		}
-	};
+	}
 }

@@ -32,10 +32,10 @@ class BluetoothSyncManager extends P2PSyncManager {
 	/**
 	 * Initializes a new Bluetooth sync manager.
 	 * @param context The context to use.
-	 * @param p2pListener The listener to notify of P2P changes.
+	 * @param changeListener The listener to notify of P2P changes.
 	 */
-	public BluetoothSyncManager(Context context, IP2PListener p2pListener) {
-		super(context, ConnectionType.BLUETOOTH, p2pListener);
+	public BluetoothSyncManager(Context context, IP2PChangeListener changeListener) {
+		super(context, ConnectionType.BLUETOOTH, changeListener);
 	}
 
 	@Override

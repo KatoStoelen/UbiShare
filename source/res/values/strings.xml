@@ -20,5 +20,8 @@
     <string name="full_sync_button">Full Synchronization</string>
     <string name="title_activity_p2_p">P2PActivity</string>
     <string name="action_settings">Settings</string>
+    
+    <string name="button_start_discover">Discover Peers</string>
+    <string name="label_status">Status: </string>
 
 </resources>

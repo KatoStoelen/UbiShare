@@ -1,7 +1,27 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".P2PActivity" >
+    
+    <Button
+        android:id="@+id/button_start_discover"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:onClick="startDiscover"
+        android:text="@string/button_start_discover" />
+    
+	<TextView
+		android:id="@+id/label_status"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="@string/label_status"
+		android:textSize="8pt" />
+	
+	<ListView
+        android:id="@+id/list_peers"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
 
-</RelativeLayout>
+</LinearLayout>

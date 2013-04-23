@@ -17,7 +17,6 @@ package org.societies.android.p2p;
 
 import java.util.List;
 
-import org.societies.android.p2p.P2PConnection.ConnectionType;
 import org.societies.android.p2p.P2PSyncManager.P2PInterfaceStatus;
 import org.societies.android.p2p.P2PSyncManager.SyncRole;
 
@@ -26,7 +25,7 @@ import org.societies.android.p2p.P2PSyncManager.SyncRole;
  * 
  * @author Kato
  */
-public interface IP2PListener {
+public interface IP2PChangeListener {
 	
 	/**
 	 * Called when new peers are available.
@@ -34,44 +33,43 @@ public interface IP2PListener {
 	 * @param completeList Whether or not the peers are a complete listing of
 	 * available peers. If <code>false</code>, the given peers come in addition
 	 * to any previously found peers.
-	 * @param connectionType The connection type in use.
+	 * @param sender The sender of the notification.
 	 */
 	public void onPeersAvailable(
-			List<P2PDevice> peers, boolean completeList, ConnectionType connectionType);
+			List<P2PDevice> peers, boolean completeList, Object sender);
 	
 	/**
 	 * Called when the status of the P2P interface changes.
 	 * @param status The status of the P2P interface.
-	 * @param connectionType The connection type in use.
+	 * @param sender The sender of the notification.
 	 */
-	public void onP2pInterfaceStatusChange(
-			P2PInterfaceStatus status, ConnectionType connectionType);
+	public void onP2pInterfaceStatusChange(P2PInterfaceStatus status, Object sender);
 	
 	/**
 	 * Called when the current device info changes.
 	 * @param device The new device info.
-	 * @param connectionType The connection type in use.
+	 * @param sender The sender of the notification.
 	 */
-	public void onThisDeviceChange(P2PDevice device, ConnectionType connectionType);
+	public void onThisDeviceChange(P2PDevice device, Object sender);
 	
 	/**
 	 * Called if the discovery of peers fails.
 	 * @param reason The reason of failure.
-	 * @param connectionType The connection type in use.
+	 * @param sender The sender of the notification.
 	 */
-	public void onDiscoverPeersFailure(String reason, ConnectionType connectionType);
+	public void onDiscoverPeersFailure(String reason, Object sender);
 	
 	/**
 	 * Called if the connection process fails.
 	 * @param reason The reason of failure.
-	 * @param connectionType The connection type in use.
+	 * @param sender The sender of the notification.
 	 */
-	public void onConnectFailure(String reason, ConnectionType connectionType);
+	public void onConnectFailure(String reason, Object sender);
 	
 	/**
 	 * Called when a connection to another device is successfully made.
 	 * @param role The synchronization role of the current device.
-	 * @param connectionType The connection type in use.
+	 * @param sender The sender of the notification.
 	 */
-	public void onSuccessfulConnection(SyncRole role, ConnectionType connectionType);
+	public void onSuccessfulConnection(SyncRole role, Object sender);
 }
