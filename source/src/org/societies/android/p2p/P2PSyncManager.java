@@ -27,6 +27,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.IBinder;
+import android.util.Log;
 
 /**
  * The P2PSyncManager handles the creation of WiFi Direct groups
@@ -35,6 +36,8 @@ import android.os.IBinder;
  * @author Kato
  */
 public abstract class P2PSyncManager {
+	
+	public static final String TAG = "P2PSyncManager";
 
 	/**
 	 * An enum of P2P interface statuses.
@@ -61,12 +64,14 @@ public abstract class P2PSyncManager {
 		CLIENT
 	}
 	
+	private final Object mTerminationLock = new Object();
+	
+	private final ConnectionType mConnectionType;
 	private IntentFilter mIntentFilter;
 	private BroadcastReceiver mBroadcastReceiver;
 	private ServiceConnection mServiceConnection;
-	protected Context mContext;
 	
-	private final ConnectionType mConnectionType;
+	protected Context mContext;
 	protected final IP2PListener mP2pListener;
 	
 	/**
@@ -75,7 +80,7 @@ public abstract class P2PSyncManager {
 	 * @param connectionType The type of connection to use.
 	 * @param p2pListener The P2P listener.
 	 */
-	public P2PSyncManager(
+	protected P2PSyncManager(
 			Context context,
 			ConnectionType connectionType,
 			IP2PListener p2pListener) {
@@ -86,24 +91,6 @@ public abstract class P2PSyncManager {
 		mServiceConnection = getServiceConnection();
 		
 		mP2pListener = p2pListener;
-	}
-	
-	/**
-	 * Gets the service connection.
-	 * @return The service connection.
-	 */
-	private ServiceConnection getServiceConnection() {
-		return new ServiceConnection() {
-			public void onServiceDisconnected(ComponentName name) { }
-			public void onServiceConnected(ComponentName name, IBinder service) {
-				LocalServiceBinder localBinder = (LocalServiceBinder) service;
-				
-				ISyncService syncService = localBinder.getService();
-				syncService.stopSync(true);
-				
-				mContext.unbindService(this);
-			}
-		};
 	}
 	
 	/**
@@ -155,16 +142,21 @@ public abstract class P2PSyncManager {
 	 * Starts the sync server.
 	 */
 	protected void startSyncServer() {
-		stopSync(true);
-		
-		P2PConnectionListener listener = getServerConnectionListener();
-		
-		Intent intent = new Intent(mContext, P2PSyncServerService.class);
-		intent.putExtra(
-				P2PSyncServerService.EXTRA_CONNECTION_LISTENER,
-				listener);
-		
-		mContext.startService(intent);
+		try {
+			stopSync(true);
+			
+			P2PConnectionListener listener = getServerConnectionListener();
+			
+			Intent intent = new Intent(mContext, P2PSyncServerService.class);
+			intent.putExtra(
+					P2PSyncServerService.EXTRA_CONNECTION_LISTENER,
+					listener);
+			
+			mContext.startService(intent);
+		} catch (InterruptedException e) {
+			Log.e(TAG, "Could not start sync server: Interrupted while " +
+					"awaiting sync server termination");
+		}
 	}
 	
 	/**
@@ -176,7 +168,8 @@ public abstract class P2PSyncManager {
 				mContext.getSharedPreferences(
 						P2PConstants.PREFERENCE_FILE, Context.MODE_PRIVATE);
 		
-		String uniqueId = preferences.getString(P2PConstants.PREFERENCE_UNIQUE_ID, null);
+		String uniqueId = preferences.getString(
+				P2PConstants.PREFERENCE_UNIQUE_ID, null);
 		
 		if (uniqueId == null) {
 			uniqueId = UUID.randomUUID().toString();
@@ -193,22 +186,26 @@ public abstract class P2PSyncManager {
 	 * Stops the synchronization.
 	 * @param awaitTermination Whether or not to block until the
 	 * synchronization has terminated.
+	 * @throws InterruptedException If the thread is interrupted while awaiting
+	 * termination.
 	 */
-	public void stopSync(boolean awaitTermination) {
-		// TODO: Figure out awaitTermination (wait() / notify())
+	public void stopSync(boolean awaitTermination) throws InterruptedException {
+		Intent intent = null;
 		
-		if (P2PSyncClientService.IS_RUNNING) {
-			mContext.bindService(
-					new Intent(mContext, P2PSyncClientService.class),
-					mServiceConnection,
-					0);
-		}
+		if (P2PSyncClientService.IS_RUNNING)
+			intent = new Intent(mContext, P2PSyncClientService.class);
+		else if (P2PSyncServerService.IS_RUNNING)
+			intent = new Intent(mContext, P2PSyncServerService.class);
 		
-		if (P2PSyncServerService.IS_RUNNING) {
+		if (intent != null) {
 			mContext.bindService(
-					new Intent(mContext, P2PSyncServerService.class),
-					mServiceConnection,
-					0);
+					intent, mServiceConnection, Context.BIND_AUTO_CREATE);
+			
+			if (awaitTermination) {
+				synchronized (mTerminationLock) {
+					mTerminationLock.wait();
+				}
+			}
 		}
 	}
 
@@ -218,5 +215,47 @@ public abstract class P2PSyncManager {
 	 */
 	public ConnectionType getConnectionType() {
 		return mConnectionType;
+	}
+	
+	/**
+	 * Gets the service connection.
+	 * @return The service connection.
+	 */
+	private ServiceConnection getServiceConnection() {
+		return new ServiceConnection() {
+			public void onServiceDisconnected(ComponentName name) { }
+			public void onServiceConnected(ComponentName name, IBinder service) {
+				LocalServiceBinder localBinder = (LocalServiceBinder) service;
+				
+				ISyncService syncService = localBinder.getService();
+				syncService.stopSync(true);
+				
+				synchronized (mTerminationLock) {
+					mTerminationLock.notify();
+				}
+				
+				mContext.unbindService(this);
+			}
+		};
+	}
+	
+	/**
+	 * Gets the sync manager with the specified connection type.
+	 * @param context The context to use.
+	 * @param listener The listener to notify of P2P changes.
+	 * @param connectionType The connection type to use.
+	 * @return An initialized <code>P2PSyncManager</code> instance.
+	 */
+	public static P2PSyncManager getSyncManager(
+			Context context,
+			IP2PListener listener,
+			ConnectionType connectionType) {
+		if (connectionType == ConnectionType.WIFI_DIRECT)
+			return new WiFiDirectSyncManager(context, listener);
+		else if (connectionType == ConnectionType.BLUETOOTH)
+			return new BluetoothSyncManager(context, listener);
+		else
+			throw new IllegalArgumentException("Unknown connection type: "
+					+ connectionType);
 	}
 }

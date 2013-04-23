@@ -27,7 +27,7 @@ import android.content.IntentFilter;
  * 
  * @author Kato
  */
-public class BluetoothSyncManager extends P2PSyncManager {
+class BluetoothSyncManager extends P2PSyncManager {
 
 	/**
 	 * Initializes a new Bluetooth sync manager.

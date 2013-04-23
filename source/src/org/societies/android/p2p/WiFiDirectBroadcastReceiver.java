@@ -96,6 +96,9 @@ class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
 		}
 	}
 	
+	/**
+	 * Listener used to handle notifications of peer list changes.
+	 */
 	private final PeerListListener mPeerListListener = new PeerListListener() {
 		public void onPeersAvailable(WifiP2pDeviceList peers) {
 			List<P2PDevice> devices = new ArrayList<P2PDevice>();

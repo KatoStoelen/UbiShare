@@ -30,6 +30,7 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.ActionListener;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
+import android.util.Log;
 import android.util.SparseArray;
 
 /**
@@ -39,8 +40,10 @@ import android.util.SparseArray;
  */
 class WiFiDirectSyncManager extends P2PSyncManager {
 	
+	public static final String TAG = "WiFiDirectSyncManager";
+	
 	/**
-	 * A map containing error messages of each error code.
+	 * A map containing error messages mapped with error codes.
 	 */
 	private static final SparseArray<String> errorMessagesWifiDirect;
 	
@@ -71,19 +74,24 @@ class WiFiDirectSyncManager extends P2PSyncManager {
 	 * @param groupOwnerAddress The address of the group owner.
 	 */
 	private void startSyncClient(InetSocketAddress groupOwnerAddress) {
-		stopSync(true);
-		
-		Intent intent = new Intent(mContext, P2PSyncClientService.class);
-		intent.putExtra(
-				P2PSyncClientService.EXTRA_CONNECTION,
-				new WiFiDirectConnection(groupOwnerAddress));
-		intent.putExtra(
-				P2PSyncClientService.EXTRA_LISTENER,
-				new WiFiDirectConnectionListener(
-						P2PConstants.WIFI_DIRECT_CLIENT_PORT));
-		intent.putExtra(P2PSyncClientService.EXTRA_UNIQUE_ID, getUniqueId());
-		
-		mContext.startService(intent);
+		try {
+			stopSync(true);
+			
+			Intent intent = new Intent(mContext, P2PSyncClientService.class);
+			intent.putExtra(
+					P2PSyncClientService.EXTRA_CONNECTION,
+					new WiFiDirectConnection(groupOwnerAddress));
+			intent.putExtra(
+					P2PSyncClientService.EXTRA_LISTENER,
+					new WiFiDirectConnectionListener(
+							P2PConstants.WIFI_DIRECT_CLIENT_PORT));
+			intent.putExtra(P2PSyncClientService.EXTRA_UNIQUE_ID, getUniqueId());
+			
+			mContext.startService(intent);
+		} catch (InterruptedException e) {
+			Log.e(TAG, "Could not start sync client: Interrupted while " +
+					"awaiting sync client termination");
+		}
 	}
 
 	@Override
