@@ -18,5 +18,7 @@
     <string name="box_preference_category_title">Account Settings</string>
     <string name="box_account_name">Box</string>
     <string name="full_sync_button">Full Synchronization</string>
+    <string name="title_activity_p2_p">P2PActivity</string>
+    <string name="action_settings">Settings</string>
 
 </resources>
