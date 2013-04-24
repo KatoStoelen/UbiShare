@@ -5,12 +5,19 @@
     android:orientation="vertical"
     tools:context=".P2PActivity" >
     
+    <TextView
+		android:id="@+id/label_this_device"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="@string/label_this_device"
+		android:textSize="8pt" />
+    
     <Button
-        android:id="@+id/button_start_discover"
+        android:id="@+id/button_magic"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:onClick="startDiscover"
-        android:text="@string/button_start_discover" />
+        android:onClick="onButtonClick"
+        android:text="@string/button_magic_discover" />
     
 	<TextView
 		android:id="@+id/label_status"
