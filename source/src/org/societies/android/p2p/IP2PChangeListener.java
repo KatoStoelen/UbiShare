@@ -64,12 +64,32 @@ public interface IP2PChangeListener {
 	 * @param reason The reason of failure.
 	 * @param sender The sender of the notification.
 	 */
-	public void onConnectFailure(String reason, Object sender);
+	public void onConnectionFailure(String reason, Object sender);
 	
 	/**
 	 * Called when a connection to another device is successfully made.
 	 * @param role The synchronization role of the current device.
 	 * @param sender The sender of the notification.
 	 */
-	public void onSuccessfulConnection(SyncRole role, Object sender);
+	public void onConnectionSuccess(SyncRole role, Object sender);
+	
+	/**
+	 * Called when a disconnect attempt fails.
+	 * @param reason The reason of failure.
+	 * @param sender The sender of the notification.
+	 */
+	public void onDisconnectFailure(String reason, Object sender);
+	
+	/**
+	 * Called when a disconnect attempt has succeeded.
+	 * @param sender The sender of the notification.
+	 */
+	public void onDisconnectSuccess(Object sender);
+	
+	/**
+	 * Called when the synchronization has stopped after a call to
+	 * <code>stopSync()</code>.
+	 * @param sender The sender of the notification.
+	 */
+	public void onSyncStopped(Object sender);
 }

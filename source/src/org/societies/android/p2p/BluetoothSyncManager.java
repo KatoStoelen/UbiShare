@@ -66,4 +66,9 @@ class BluetoothSyncManager extends P2PSyncManager {
 	protected P2PConnectionListener getServerConnectionListener() {
 		return new BluetoothConnectionListener();
 	}
+
+	@Override
+	public void disconnect() {
+		// TODO: IMPLEMENT
+	}
 }

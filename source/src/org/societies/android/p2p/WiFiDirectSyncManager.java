@@ -51,7 +51,7 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 	static {
 		errorMessagesWifiDirect = new SparseArray<String>();
 		errorMessagesWifiDirect.append(WifiP2pManager.ERROR, "INTERNAL ERROR");
-		errorMessagesWifiDirect.append(WifiP2pManager.P2P_UNSUPPORTED, "P2P_UNSUPPORTED");
+		errorMessagesWifiDirect.append(WifiP2pManager.P2P_UNSUPPORTED, "P2P UNSUPPORTED");
 		errorMessagesWifiDirect.append(WifiP2pManager.BUSY, "BUSY");
 	}
 	
@@ -134,7 +134,22 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 			public void onSuccess() { /* Deliberately empty */ }
 			
 			public void onFailure(int reason) {
-				mChangeListener.onConnectFailure(
+				mChangeListener.onConnectionFailure(
+						errorMessagesWifiDirect.get(reason),
+						WiFiDirectSyncManager.this);
+			}
+		});
+	}
+	
+	@Override
+	public void disconnect() {
+		mWifiP2pManager.removeGroup(mChannel, new ActionListener() {
+			public void onSuccess() {
+				mChangeListener.onDisconnectSuccess(WiFiDirectSyncManager.this);
+			}
+			
+			public void onFailure(int reason) {
+				mChangeListener.onDisconnectFailure(
 						errorMessagesWifiDirect.get(reason),
 						WiFiDirectSyncManager.this);
 			}
@@ -179,7 +194,7 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 		if (info.groupFormed && info.isGroupOwner) {
 			startSyncServer();
 			
-			mChangeListener.onSuccessfulConnection(SyncRole.SERVER, this);
+			mChangeListener.onConnectionSuccess(SyncRole.SERVER, this);
 		} else if (info.groupFormed) {
 			InetAddress groupOwnerAddress = info.groupOwnerAddress;
 			InetSocketAddress socketAddress = new InetSocketAddress(
@@ -187,7 +202,7 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 			
 			startSyncClient(socketAddress);
 			
-			mChangeListener.onSuccessfulConnection(SyncRole.CLIENT, this);
+			mChangeListener.onConnectionSuccess(SyncRole.CLIENT, this);
 		}
 	}
 }

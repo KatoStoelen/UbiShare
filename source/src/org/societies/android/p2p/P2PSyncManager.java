@@ -132,6 +132,11 @@ public abstract class P2PSyncManager {
 	public abstract void connectTo(P2PDevice device);
 	
 	/**
+	 * Disconnects from the P2P group.
+	 */
+	public abstract void disconnect();
+	
+	/**
 	 * Gets the connection listener used to accept incoming connections when
 	 * acting as a sync server.
 	 * @return The connection listener of the sync server.
@@ -189,7 +194,7 @@ public abstract class P2PSyncManager {
 	 * @throws InterruptedException If the thread is interrupted while awaiting
 	 * termination.
 	 */
-	public void stopSync(boolean awaitTermination) throws InterruptedException {
+	protected void stopSync(boolean awaitTermination) throws InterruptedException {
 		Intent intent = null;
 		
 		if (P2PSyncClientService.IS_RUNNING)
@@ -207,6 +212,18 @@ public abstract class P2PSyncManager {
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Stops the synchronization. This is an asynchronous call.
+	 * <code>IP2PChangeListener.onSyncStopped()</code> will be called when
+	 * the synchronization has stopped.
+	 * @see IP2PChangeListener#onSyncStopped(Object)
+	 */
+	public void stopSync() {
+		try {
+			stopSync(false);
+		} catch (InterruptedException e) { /* Ignore */ }
 	}
 
 	/**
@@ -230,11 +247,13 @@ public abstract class P2PSyncManager {
 				ISyncService syncService = localBinder.getService();
 				syncService.stopSync(true);
 				
+				mContext.unbindService(this);
+				
 				synchronized (mTerminationLock) {
-					mTerminationLock.notify();
+					mTerminationLock.notifyAll();
 				}
 				
-				mContext.unbindService(this);
+				mChangeListener.onSyncStopped(P2PSyncManager.this);
 			}
 		};
 	}

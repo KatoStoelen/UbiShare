@@ -28,7 +28,7 @@ import android.os.Parcelable;
  * 
  * @author Kato
  */
-abstract class P2PConnection implements Parcelable {
+public abstract class P2PConnection implements Parcelable {
 	
 	/**
 	 * An enum of supported connection types.
