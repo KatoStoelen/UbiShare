@@ -12,6 +12,7 @@ import org.societies.android.p2p.P2PSyncManager.SyncRole;
 import org.societies.android.platform.R;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -96,6 +97,8 @@ public class P2PActivity extends Activity implements IP2PChangeListener {
 	 * @param view The clicked view.
 	 */
 	public void onButtonClick(View view) {
+		Log.i(TAG, "Magic Button Clicked");
+		
 		if (mConnected)
 			confirmDisconnect();
 		else
@@ -107,6 +110,8 @@ public class P2PActivity extends Activity implements IP2PChangeListener {
 	 * @param view The clicked view.
 	 */
 	public void onCloseButtonClick(View view) {
+		Log.i(TAG, "Close Button Clicked");
+		
 		if (mSyncManager.isSynchronizationActive() || mSyncManager.isConnected()) {
 			mClosing = true;
 			

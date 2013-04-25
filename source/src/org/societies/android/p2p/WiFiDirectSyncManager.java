@@ -77,6 +77,8 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 	 * @param groupOwnerAddress The address of the group owner.
 	 */
 	private void startSyncClient(InetSocketAddress groupOwnerAddress) {
+		Log.i(TAG, "Starting Sync Client...");
+		
 		try {
 			stopSync(true);
 			
@@ -116,6 +118,8 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 
 	@Override
 	public void discoverPeers() {
+		Log.i(TAG, "Discovering peers...");
+		
 		mWifiP2pManager.discoverPeers(mChannel, new ActionListener() {
 			public void onSuccess() { /* Deliberately empty */ }
 
@@ -129,6 +133,8 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 
 	@Override
 	public void connectTo(P2PDevice device) {
+		Log.i(TAG, "Connecting to device " + device.getName() + "...");
+		
 		WifiP2pConfig config = new WifiP2pConfig();
 		config.deviceAddress = device.getAddress();
 		
@@ -145,6 +151,8 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 	
 	@Override
 	public void disconnect() {
+		Log.i(TAG, "Disconnecting...");
+		
 		mWifiP2pManager.removeGroup(mChannel, new ActionListener() {
 			public void onSuccess() {
 				mChangeListener.onDisconnectSuccess(WiFiDirectSyncManager.this);

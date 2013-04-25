@@ -111,6 +111,7 @@ public abstract class P2PSyncManager {
 	 */
 	public void registerBroadcastReceiver() {
 		mContext.registerReceiver(mBroadcastReceiver, mIntentFilter);
+		Log.i(TAG, "Broadcast Receiver Registered");
 	}
 	
 	/**
@@ -118,6 +119,7 @@ public abstract class P2PSyncManager {
 	 */
 	public void unregisterBroadcastReceiver() {
 		mContext.unregisterReceiver(mBroadcastReceiver);
+		Log.i(TAG, "Broadcast Receiver Unregistered");
 	}
 	
 	/**
@@ -155,6 +157,8 @@ public abstract class P2PSyncManager {
 	 * Starts the sync server.
 	 */
 	protected void startSyncServer() {
+		Log.i(TAG, "Starting Sync Server...");
+		
 		try {
 			stopSync(true);
 			
@@ -203,6 +207,8 @@ public abstract class P2PSyncManager {
 	 * termination.
 	 */
 	protected void stopSync(boolean awaitTermination) throws InterruptedException {
+		Log.i(TAG, "Stopping Synchronization...");
+		
 		Intent intent = null;
 		
 		if (P2PSyncClientService.IS_RUNNING)
