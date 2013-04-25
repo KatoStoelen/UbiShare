@@ -22,6 +22,11 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 
+/**
+ * Activity for setting up P2P synchronization.
+ * 
+ * @author Kato
+ */
 public class P2PActivity extends Activity implements IP2PChangeListener {
 	
 	public static final String TAG = "P2PActivity";
@@ -148,6 +153,14 @@ public class P2PActivity extends Activity implements IP2PChangeListener {
 	private void setStatus(String status) {
 		mStatusLabel.setText(getString(R.string.label_status) + status);
 	}
+	
+	/**
+	 * Sets the text of the name label.
+	 * @param name The name of this device.
+	 */
+	private void setName(String name) {
+		mNameLabel.setText(getString(R.string.label_this_device) + name);
+	}
 
 	/* (non-Javadoc)
 	 * @see org.societies.android.p2p.IP2PChangeListener#onPeersAvailable(java.util.List, boolean, java.lang.Object)
@@ -175,7 +188,7 @@ public class P2PActivity extends Activity implements IP2PChangeListener {
 	 * @see org.societies.android.p2p.IP2PChangeListener#onThisDeviceChange(org.societies.android.p2p.P2PDevice, java.lang.Object)
 	 */
 	public void onThisDeviceChange(P2PDevice device, Object sender) {
-		mNameLabel.setText(device.getName());
+		setName(device.getName());
 	}
 
 	/* (non-Javadoc)
