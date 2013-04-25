@@ -235,6 +235,15 @@ public abstract class P2PSyncManager {
 	}
 	
 	/**
+	 * Gets whether or not the synchronization is currently active.
+	 * @return <code>true</code> if either sync server or sync client is running,
+	 * otherwise <code>false</code>.
+	 */
+	public boolean isSynchronizationActive() {
+		return P2PSyncClientService.IS_RUNNING || P2PSyncServerService.IS_RUNNING;
+	}
+	
+	/**
 	 * Gets the service connection.
 	 * @return The service connection.
 	 */
