@@ -137,6 +137,14 @@ public abstract class P2PSyncManager {
 	public abstract void disconnect();
 	
 	/**
+	 * Gets whether or not this device is currently connected to a peer-to-peer
+	 * network.
+	 * @return <code>true</code> if the device is connected to a peer-to-peer
+	 * network, otherwise <code>false</code>.
+	 */
+	public abstract boolean isConnected();
+	
+	/**
 	 * Gets the connection listener used to accept incoming connections when
 	 * acting as a sync server.
 	 * @return The connection listener of the sync server.

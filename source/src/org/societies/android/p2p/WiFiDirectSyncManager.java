@@ -57,6 +57,8 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 	
 	private final WifiP2pManager mWifiP2pManager;
 	private final Channel mChannel;
+	
+	private boolean mConnected = false;
 
 	/**
 	 * Initializes a new WiFi Direct sync manager.
@@ -156,6 +158,11 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 		});
 	}
 	
+	@Override
+	public boolean isConnected() {
+		return mConnected;
+	}
+	
 	/**
 	 * Notifies the listener of P2P interface status change.
 	 * @param status The state of the P2P interface.
@@ -191,6 +198,8 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 	 * @see android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener#onConnectionInfoAvailable(android.net.wifi.p2p.WifiP2pInfo)
 	 */
 	public void onConnectionInfoAvailable(WifiP2pInfo info) {
+		mConnected = info.groupFormed;
+		
 		if (info.groupFormed && info.isGroupOwner) {
 			startSyncServer();
 			
