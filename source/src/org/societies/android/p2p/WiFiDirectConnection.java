@@ -48,6 +48,7 @@ class WiFiDirectConnection extends P2PConnection {
 	private BufferedWriter mWriter;
 	
 	private boolean mInitialized = false;
+	private boolean mConnectRequired = true;
 	
 	/**
 	 * Initializes a new WiFi Direct connection with an open connection
@@ -59,6 +60,8 @@ class WiFiDirectConnection extends P2PConnection {
 		super(ConnectionType.WIFI_DIRECT);
 		
 		initialize(socket);
+		
+		mConnectRequired = false;
 	}
 	
 	/**
@@ -162,15 +165,18 @@ class WiFiDirectConnection extends P2PConnection {
 
 	@Override
 	public boolean connect() throws IOException, InterruptedIOException {
-		if (isConnected())
-			close();
-		
-		Socket socket = new Socket();
-		socket.connect(mRemoteAddress, CONNECTION_TIMEOUT);
-		
-		initialize(socket);
-		
-		return isConnected();
+		if (mConnectRequired) {
+			if (isConnected())
+				close();
+			
+			Socket socket = new Socket();
+			socket.connect(mRemoteAddress, CONNECTION_TIMEOUT);
+			initialize(socket);
+			
+			return isConnected();
+		} else {
+			return false;
+		}
 	}
 	
 	/**

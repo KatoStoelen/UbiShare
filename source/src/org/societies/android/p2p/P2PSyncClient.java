@@ -221,6 +221,8 @@ class P2PSyncClient extends Thread implements UpdateListener {
 			mHandler.start();
 			
 			try {
+				mListener.initialize();
+				
 				while (!mStopping) {
 					P2PConnection connection = null;
 					try {

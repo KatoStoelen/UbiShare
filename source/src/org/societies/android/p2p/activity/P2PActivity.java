@@ -193,6 +193,8 @@ public class P2PActivity extends Activity implements IP2PChangeListener {
 	 */
 	public void onPeersAvailable(
 			List<P2PDevice> peers, boolean completeList, Object sender) {
+		Log.i(TAG, "Received Notification: peersAvailable");
+		
 		if (completeList)
 			mPeers.clear();
 		
@@ -207,6 +209,8 @@ public class P2PActivity extends Activity implements IP2PChangeListener {
 	 */
 	public void onP2pInterfaceStatusChange(
 			P2PInterfaceStatus status, Object sender) {
+		Log.i(TAG, "Received Notification: p2pInterfaceStatusChange");
+		
 		setStatus("P2P Interface " + status);
 	}
 
@@ -214,6 +218,8 @@ public class P2PActivity extends Activity implements IP2PChangeListener {
 	 * @see org.societies.android.p2p.IP2PChangeListener#onThisDeviceChange(org.societies.android.p2p.P2PDevice, java.lang.Object)
 	 */
 	public void onThisDeviceChange(P2PDevice device, Object sender) {
+		Log.i(TAG, "Received Notification: thisDeviceChange");
+		
 		setName(device.getName());
 	}
 
@@ -221,6 +227,8 @@ public class P2PActivity extends Activity implements IP2PChangeListener {
 	 * @see org.societies.android.p2p.IP2PChangeListener#onDiscoverPeersFailure(java.lang.String, java.lang.Object)
 	 */
 	public void onDiscoverPeersFailure(String reason, Object sender) {
+		Log.i(TAG, "Received Notification: discoverPeersFailure");
+		
 		setStatus("Failed to discover peers (" + reason + ")");
 	}
 
@@ -228,6 +236,8 @@ public class P2PActivity extends Activity implements IP2PChangeListener {
 	 * @see org.societies.android.p2p.IP2PChangeListener#onConnectFailure(java.lang.String, java.lang.Object)
 	 */
 	public void onConnectionFailure(String reason, Object sender) {
+		Log.i(TAG, "Received Notification: connectionFailure");
+		
 		setStatus("Failed to connect (" + reason + ")");
 	}
 
@@ -235,6 +245,8 @@ public class P2PActivity extends Activity implements IP2PChangeListener {
 	 * @see org.societies.android.p2p.IP2PChangeListener#onSuccessfulConnection(org.societies.android.p2p.P2PSyncManager.SyncRole, java.lang.Object)
 	 */
 	public void onConnectionSuccess(SyncRole role, Object sender) {
+		Log.i(TAG, "Received Notification: connectionSuccess");
+		
 		mConnected = true;
 		
 		mMagicButton.setText(getString(R.string.button_magic_disconnect));
@@ -245,6 +257,8 @@ public class P2PActivity extends Activity implements IP2PChangeListener {
 	 * @see org.societies.android.p2p.IP2PChangeListener#onDisconnectFailure(java.lang.String, java.lang.Object)
 	 */
 	public void onDisconnectFailure(String reason, Object sender) {
+		Log.i(TAG, "Received Notification: disconnectFailure");
+		
 		setStatus("Failed to disconnect (" + reason + ")");
 	}
 
@@ -252,6 +266,8 @@ public class P2PActivity extends Activity implements IP2PChangeListener {
 	 * @see org.societies.android.p2p.IP2PChangeListener#onDisconnectSuccess(java.lang.Object)
 	 */
 	public void onDisconnectSuccess(Object sender) {
+		Log.i(TAG, "Received Notification: disconnectSuccess");
+		
 		mConnected = false;
 		
 		mMagicButton.setText(getString(R.string.button_magic_discover));
@@ -265,6 +281,8 @@ public class P2PActivity extends Activity implements IP2PChangeListener {
 	 * @see org.societies.android.p2p.IP2PChangeListener#onSyncStopped(java.lang.Object)
 	 */
 	public void onSyncStopped(Object sender) {
+		Log.i(TAG, "Received Notification: syncStopped");
+		
 		mSyncManager.disconnect();
 	}
 }

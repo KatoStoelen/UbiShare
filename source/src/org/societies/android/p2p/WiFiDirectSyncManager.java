@@ -25,6 +25,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
@@ -76,27 +77,33 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 	 * Starts the sync client using WiFi Direct.
 	 * @param groupOwnerAddress The address of the group owner.
 	 */
-	private void startSyncClient(InetSocketAddress groupOwnerAddress) {
-		Log.i(TAG, "Starting Sync Client...");
-		
-		try {
-			stopSync(true);
-			
-			Intent intent = new Intent(mContext, P2PSyncClientService.class);
-			intent.putExtra(
-					P2PSyncClientService.EXTRA_CONNECTION,
-					new WiFiDirectConnection(groupOwnerAddress));
-			intent.putExtra(
-					P2PSyncClientService.EXTRA_LISTENER,
-					new WiFiDirectConnectionListener(
-							P2PConstants.WIFI_DIRECT_CLIENT_PORT));
-			intent.putExtra(P2PSyncClientService.EXTRA_UNIQUE_ID, getUniqueId());
-			
-			mContext.startService(intent);
-		} catch (InterruptedException e) {
-			Log.e(TAG, "Could not start sync client: Interrupted while " +
-					"awaiting sync client termination");
-		}
+	private void startSyncClient(final InetSocketAddress groupOwnerAddress) {
+		new Thread(new Runnable() { /* Avoid NotworkOnMainThreadException */
+			public void run() {
+				Log.i(TAG, "Starting Sync Client...");
+				
+				try {
+					stopSync(true);
+					
+					Intent intent = new Intent(
+							mContext, P2PSyncClientService.class);
+					intent.putExtra(
+							P2PSyncClientService.EXTRA_CONNECTION,
+							new WiFiDirectConnection(groupOwnerAddress));
+					intent.putExtra(
+							P2PSyncClientService.EXTRA_LISTENER,
+							new WiFiDirectConnectionListener(
+									P2PConstants.WIFI_DIRECT_CLIENT_PORT));
+					intent.putExtra(
+							P2PSyncClientService.EXTRA_UNIQUE_ID, getUniqueId());
+					
+					mContext.startService(intent);
+				} catch (InterruptedException e) {
+					Log.e(TAG, "Could not start sync client: Interrupted while " +
+							"awaiting sync client termination");
+				}
+			}
+		}).start();
 	}
 
 	@Override
@@ -118,12 +125,18 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 
 	@Override
 	public void discoverPeers() {
+		if (!mInitialized)
+			throw new IllegalStateException(ERROR_NOT_INITIALIZED);
+		
 		Log.i(TAG, "Discovering peers...");
 		
 		mWifiP2pManager.discoverPeers(mChannel, new ActionListener() {
-			public void onSuccess() { /* Deliberately empty */ }
+			public void onSuccess() {
+				Log.i(TAG, "Peer Discovery Successful");
+			}
 
 			public void onFailure(int reason) {
+				Log.i(TAG, "Peer Discovery Failed: " + reason);
 				mChangeListener.onDiscoverPeersFailure(
 						errorMessagesWifiDirect.get(reason),
 						WiFiDirectSyncManager.this);
@@ -133,15 +146,23 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 
 	@Override
 	public void connectTo(P2PDevice device) {
-		Log.i(TAG, "Connecting to device " + device.getName() + "...");
+		if (!mInitialized)
+			throw new IllegalStateException(ERROR_NOT_INITIALIZED);
+		
+		Log.i(TAG, "Connecting to device " + device.getName() +
+				" (" + device.getAddress() + ")...");
 		
 		WifiP2pConfig config = new WifiP2pConfig();
 		config.deviceAddress = device.getAddress();
+		config.wps.setup = WpsInfo.PBC;
 		
 		mWifiP2pManager.connect(mChannel, config, new ActionListener() {
-			public void onSuccess() { /* Deliberately empty */ }
+			public void onSuccess() {
+				Log.i(TAG, "Connection Successful");
+			}
 			
 			public void onFailure(int reason) {
+				Log.i(TAG, "Connection Failed: " + reason);
 				mChangeListener.onConnectionFailure(
 						errorMessagesWifiDirect.get(reason),
 						WiFiDirectSyncManager.this);
@@ -151,14 +172,19 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 	
 	@Override
 	public void disconnect() {
+		if (!mInitialized)
+			throw new IllegalStateException(ERROR_NOT_INITIALIZED);
+		
 		Log.i(TAG, "Disconnecting...");
 		
 		mWifiP2pManager.removeGroup(mChannel, new ActionListener() {
 			public void onSuccess() {
+				Log.i(TAG, "Disconnect Successful");
 				mChangeListener.onDisconnectSuccess(WiFiDirectSyncManager.this);
 			}
 			
 			public void onFailure(int reason) {
+				Log.i(TAG, "Disconnect Failed: " + reason);
 				mChangeListener.onDisconnectFailure(
 						errorMessagesWifiDirect.get(reason),
 						WiFiDirectSyncManager.this);
@@ -206,6 +232,8 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 	 * @see android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener#onConnectionInfoAvailable(android.net.wifi.p2p.WifiP2pInfo)
 	 */
 	public void onConnectionInfoAvailable(WifiP2pInfo info) {
+		Log.i(TAG, "Group created: " + info.groupFormed);
+		
 		mConnected = info.groupFormed;
 		
 		if (info.groupFormed && info.isGroupOwner) {

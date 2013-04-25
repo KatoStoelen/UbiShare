@@ -24,7 +24,7 @@ import android.os.IBinder;
  * 
  * @author Kato
  */
-class P2PSyncServerService extends Service implements ISyncService {
+public class P2PSyncServerService extends Service implements ISyncService {
 	
 	/** The connection listener. */
 	public static final String EXTRA_CONNECTION_LISTENER = "connection_listener";
@@ -38,7 +38,7 @@ class P2PSyncServerService extends Service implements ISyncService {
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		P2PConnectionListener listener =
-				(P2PConnectionListener) intent.getSerializableExtra(
+				(P2PConnectionListener) intent.getParcelableExtra(
 						EXTRA_CONNECTION_LISTENER);
 		
 		if (mSyncServer == null) {

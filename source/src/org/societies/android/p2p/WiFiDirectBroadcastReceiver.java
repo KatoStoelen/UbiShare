@@ -29,6 +29,7 @@ import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
+import android.util.Log;
 
 /**
  * A broadcast receiver for Wi-Fi Direct.
@@ -36,6 +37,8 @@ import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
  * @author Kato
  */
 class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
+	
+	public static final String TAG = "WiFiDirectBroadcastReceiver";
 	
 	private WiFiDirectSyncManager mSyncManager;
 	private WifiP2pManager mWifiP2pManager;
@@ -63,23 +66,27 @@ class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
 		if (WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION.equals(action)) {
 			int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
 			
+			Log.i(TAG, "P2P State Changed: " + state);
+			
 	        if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED)
 	        	mSyncManager.notifyP2pInterfaceStatusChange(P2PInterfaceStatus.ON);
 	        else
 	        	mSyncManager.notifyP2pInterfaceStatusChange(P2PInterfaceStatus.OFF);
 		} else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
-			if (mWifiP2pManager != null)
-				mWifiP2pManager.requestPeers(mChannel, mPeerListListener);
+			Log.i(TAG, "Peers Changed");
+			
+			mWifiP2pManager.requestPeers(mChannel, mPeerListListener);
 		} else if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
-			if (mWifiP2pManager == null)
-                return;
-
+			Log.i(TAG, "Connection Changed");
+			
             NetworkInfo networkInfo = (NetworkInfo) intent.getParcelableExtra(
             		WifiP2pManager.EXTRA_NETWORK_INFO);
 
             if (networkInfo.isConnected())
                 mWifiP2pManager.requestConnectionInfo(mChannel, mSyncManager);
 		} else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
+			Log.i(TAG, "This Device Changed");
+			
 			WifiP2pDevice wifiDevice = (WifiP2pDevice) intent.getParcelableExtra(
                     WifiP2pManager.EXTRA_WIFI_P2P_DEVICE);
 			
@@ -93,6 +100,8 @@ class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
 	 */
 	private final PeerListListener mPeerListListener = new PeerListListener() {
 		public void onPeersAvailable(WifiP2pDeviceList peers) {
+			Log.i(TAG, "Peers Available: " + peers.getDeviceList().size());
+			
 			List<P2PDevice> devices = new ArrayList<P2PDevice>();
 			
 			for (WifiP2pDevice device : peers.getDeviceList())

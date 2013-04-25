@@ -61,8 +61,10 @@ abstract class P2PConnectionListener implements Parcelable {
 	
 	/**
 	 * Accepts an incoming connection. Blocks until a connection is found
-	 * or the timeout value is exceeded.
+	 * or the timeout value is exceeded. A call to <code>initialize()</code> is
+	 * required before using this method.
 	 * @return The established peer-to-peer connection.
+	 * @see P2PConnectionListener#initialize()
 	 * @see P2PConnectionListener#ACCEPT_TIMEOUT
 	 * @throws IOException If an error occurs while accepting connection.
 	 * @throws InterruptedIOException If a timeout occurs.

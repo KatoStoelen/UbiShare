@@ -64,6 +64,9 @@ public abstract class P2PSyncManager {
 		CLIENT
 	}
 	
+	/** The error message when not initialized. */
+	protected static final String ERROR_NOT_INITIALIZED = "Not initialized";
+	
 	private final Object mTerminationLock = new Object();
 	
 	private final ConnectionType mConnectionType;
@@ -71,14 +74,18 @@ public abstract class P2PSyncManager {
 	private BroadcastReceiver mBroadcastReceiver;
 	private ServiceConnection mServiceConnection;
 	
-	protected Context mContext;
 	protected final IP2PChangeListener mChangeListener;
+	protected Context mContext;
+	protected boolean mInitialized = false;
 	
 	/**
-	 * Initializes a new P2P Sync Manager.
+	 * Creates a new P2P Sync Manager instance. A call to
+	 * <code>initialize()</code> is required before using the sync
+	 * manager.
 	 * @param context The context to use.
 	 * @param connectionType The type of connection to use.
 	 * @param changeListener The listener to notify of P2P changes.
+	 * @see P2PSyncManager#initialize();
 	 */
 	protected P2PSyncManager(
 			Context context,
@@ -86,11 +93,18 @@ public abstract class P2PSyncManager {
 			IP2PChangeListener changeListener) {
 		mContext = context;
 		mConnectionType = connectionType;
+		mChangeListener = changeListener;
+	}
+	
+	/**
+	 * Initializes the sync manager.
+	 */
+	protected void initialize() {
 		mIntentFilter = getIntentFilter();
 		mBroadcastReceiver = getBroadcastReceiver();
 		mServiceConnection = getServiceConnection();
 		
-		mChangeListener = changeListener;
+		mInitialized = true;
 	}
 	
 	/**
@@ -160,7 +174,8 @@ public abstract class P2PSyncManager {
 		Log.i(TAG, "Starting Sync Server...");
 		
 		try {
-			stopSync(true);
+			if (isSynchronizationActive())
+				stopSync(true);
 			
 			P2PConnectionListener listener = getServerConnectionListener();
 			
@@ -292,12 +307,18 @@ public abstract class P2PSyncManager {
 			Context context,
 			IP2PChangeListener listener,
 			ConnectionType connectionType) {
+		P2PSyncManager syncManager = null;
+		
 		if (connectionType == ConnectionType.WIFI_DIRECT)
-			return new WiFiDirectSyncManager(context, listener);
+			syncManager = new WiFiDirectSyncManager(context, listener);
 		else if (connectionType == ConnectionType.BLUETOOTH)
-			return new BluetoothSyncManager(context, listener);
+			syncManager = new BluetoothSyncManager(context, listener);
 		else
 			throw new IllegalArgumentException("Unknown connection type: "
 					+ connectionType);
+		
+		syncManager.initialize();
+		
+		return syncManager;
 	}
 }

@@ -70,6 +70,8 @@ class P2PSyncServer extends Thread implements UpdateListener {
 		mPoller.start();
 		
 		try {
+			mListener.initialize();
+			
 			while (!mStopping) {
 				try {
 					P2PConnection connection = mListener.acceptConnection();
