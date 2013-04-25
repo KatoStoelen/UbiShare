@@ -25,5 +25,7 @@
     <string name="label_this_device">Your Name: </string>
     <string name="button_magic_discover">Discover Peers</string>
     <string name="button_magic_disconnect">Disconnect</string>
+    <string name="button_p2p">P2P Synchronization</string>
+    <string name="button_close">Close</string>
 
 </resources>

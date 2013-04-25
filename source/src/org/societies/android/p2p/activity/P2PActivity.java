@@ -40,6 +40,7 @@ public class P2PActivity extends Activity implements IP2PChangeListener {
 	private List<P2PDevice> mPeers = new ArrayList<P2PDevice>();
 	
 	private boolean mConnected = false;
+	private boolean mClosing = false;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -102,6 +103,21 @@ public class P2PActivity extends Activity implements IP2PChangeListener {
 	}
 	
 	/**
+	 * On-click handler of the close button.
+	 * @param view The clicked view.
+	 */
+	public void onCloseButtonClick(View view) {
+		if (mSyncManager.isSynchronizationActive() || mSyncManager.isConnected()) {
+			mClosing = true;
+			
+			confirmDisconnect();
+			setStatus("Waiting for synchronization to stop...");
+		} else {
+			finish();
+		}
+	}
+	
+	/**
 	 * Confirms whether or not the user really wants to connect to the specified
 	 * peer.
 	 * @param peer The peer to connect to.
@@ -135,7 +151,12 @@ public class P2PActivity extends Activity implements IP2PChangeListener {
 						disconnect();
 					}
 				})
-			.setNegativeButton("No", null)
+			.setNegativeButton("No",
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+						mClosing = false;
+					}
+				})
 			.show();
 	}
 	
@@ -230,6 +251,9 @@ public class P2PActivity extends Activity implements IP2PChangeListener {
 		
 		mMagicButton.setText(getString(R.string.button_magic_discover));
 		setStatus("Disconnected");
+		
+		if (mClosing)
+			finish();
 	}
 
 	/* (non-Javadoc)
