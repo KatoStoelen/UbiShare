@@ -61,7 +61,7 @@ public abstract class P2PDevice {
 	 * Gets the connection specific status of the device.
 	 * @return The connection specific status of the device.
 	 */
-	public abstract int getConnectionStatus();
+	public abstract String getConnectionStatus();
 	
 	/**
 	 * Gets the type of the device.

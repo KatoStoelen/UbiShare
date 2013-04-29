@@ -31,6 +31,7 @@ import org.societies.android.p2p.entity.Response;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 /**
  * Provides a Wi-Fi Direct communication channel.
@@ -39,7 +40,7 @@ import android.os.Parcelable;
  */
 class WiFiDirectConnection extends P2PConnection {
 	
-	public static final String TAG = "WiFiDirectConnection";
+	public static final String TAG = P2PConnection.TAG + ":WiFiDirect";
 
 	private Socket mSocket;
 	private InetSocketAddress mRemoteAddress;
@@ -125,7 +126,11 @@ class WiFiDirectConnection extends P2PConnection {
 		if (!mInitialized)
 			throw new IllegalStateException("Not initialized");
 		
-		mWriter.write(request.serialize());
+		String serialized = request.serialize();
+		
+		Log.i(TAG, "Writing request: " + serialized);
+		
+		mWriter.write(serialized);
 		mWriter.flush();
 	}
 
@@ -134,7 +139,11 @@ class WiFiDirectConnection extends P2PConnection {
 		if (!mInitialized)
 			throw new IllegalStateException("Not initialized");
 		
-		mWriter.write(response.serialize());
+		String serialized = response.serialize();
+		
+		Log.i(TAG, "Writing response: " + serialized);
+		
+		mWriter.write(serialized);
 		mWriter.flush();
 	}
 
@@ -168,6 +177,8 @@ class WiFiDirectConnection extends P2PConnection {
 		if (mConnectRequired) {
 			if (isConnected())
 				close();
+			
+			Log.i(TAG, "Connecting to: " + mRemoteAddress);
 			
 			Socket socket = new Socket();
 			socket.connect(mRemoteAddress, CONNECTION_TIMEOUT);

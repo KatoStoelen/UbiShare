@@ -100,6 +100,8 @@ class P2PSyncClient extends Thread implements UpdateListener {
 		} catch (InterruptedException e) {
 			if (!mStopping)
 				Log.e(TAG, "Interrupted while waiting for queue");
+		} finally {
+			mStopping = true;
 		}
 		
 		Log.i(TAG, "Waiting for UpdateReceiver to terminate...");

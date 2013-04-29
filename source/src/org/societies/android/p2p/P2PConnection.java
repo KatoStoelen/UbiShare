@@ -22,6 +22,7 @@ import org.societies.android.p2p.entity.Request;
 import org.societies.android.p2p.entity.Response;
 
 import android.os.Parcelable;
+import android.util.Log;
 
 /**
  * Base class of all peer-to-peer connections.
@@ -29,6 +30,8 @@ import android.os.Parcelable;
  * @author Kato
  */
 public abstract class P2PConnection implements Parcelable {
+	
+	public static final String TAG = "P2PConnection";
 	
 	/**
 	 * An enum of supported connection types.
@@ -46,14 +49,14 @@ public abstract class P2PConnection implements Parcelable {
 	 * <code>InterruptedIOException</code> is thrown.
 	 * @see InterruptedIOException
 	 */
-	public static final int READ_TIMEOUT = 3000;
+	public static final int READ_TIMEOUT = 5000;
 	
 	/**
 	 * The number of milliseconds before a connection call times out and
 	 * a <code>InterruptedIOException</code> is thrown.
 	 * @see InterruptedIOException
 	 */
-	public static final int CONNECTION_TIMEOUT = 3000;
+	public static final int CONNECTION_TIMEOUT = 5000;
 	
 	private final ConnectionType mConnectionType;
 	
@@ -100,6 +103,8 @@ public abstract class P2PConnection implements Parcelable {
 	public Request readRequest() throws IOException, InterruptedIOException {
 		String serialized = readToEnd();
 		
+		Log.i(TAG, "Received request: " + serialized);
+		
 		return Request.deserialize(serialized);
 	}
 	
@@ -112,6 +117,8 @@ public abstract class P2PConnection implements Parcelable {
 	 */
 	public Response readResponse() throws IOException, InterruptedIOException {
 		String serialized = readToEnd();
+		
+		Log.i(TAG, "Received response: " + serialized);
 		
 		return Response.deserialize(serialized);
 	}

@@ -18,6 +18,7 @@ package org.societies.android.p2p;
 import org.societies.android.p2p.P2PConnection.ConnectionType;
 
 import android.net.wifi.p2p.WifiP2pDevice;
+import android.util.SparseArray;
 
 /**
  * Class representing a WiFi Direct device.
@@ -26,6 +27,20 @@ import android.net.wifi.p2p.WifiP2pDevice;
  */
 public class WiFiDirectP2PDevice extends P2PDevice {
 
+	/**
+	 * A map containing connection status messages.
+	 */
+	private static final SparseArray<String> CONNECTION_STATUS;
+	
+	static {
+		CONNECTION_STATUS = new SparseArray<String>();
+		CONNECTION_STATUS.append(WifiP2pDevice.AVAILABLE, "AVAILABLE");
+		CONNECTION_STATUS.append(WifiP2pDevice.CONNECTED, "CONNECTED");
+		CONNECTION_STATUS.append(WifiP2pDevice.FAILED, "FAILED");
+		CONNECTION_STATUS.append(WifiP2pDevice.INVITED, "INVITED");
+		CONNECTION_STATUS.append(WifiP2pDevice.UNAVAILABLE, "UNAVAILABLE");
+	}
+	
 	private final WifiP2pDevice mDevice;
 	
 	/**
@@ -50,11 +65,12 @@ public class WiFiDirectP2PDevice extends P2PDevice {
 
 	/**
 	 * Gets the connection status of the device.
-	 * @return The connection status of the device.
+	 * @return The connection status of the device, or <code>null</code> if
+	 * status is unknown.
 	 */
 	@Override
-	public int getConnectionStatus() {
-		return mDevice.status;
+	public String getConnectionStatus() {
+		return CONNECTION_STATUS.get(mDevice.status);
 	}
 
 	@Override

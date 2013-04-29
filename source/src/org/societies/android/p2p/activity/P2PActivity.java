@@ -177,15 +177,18 @@ public class P2PActivity extends Activity implements IP2PChangeListener {
 	 * @param status The status text.
 	 */
 	private void setStatus(String status) {
-		mStatusLabel.setText(getString(R.string.label_status) + status);
+		mStatusLabel.setText(getString(R.string.label_status) + " " + status);
 	}
 	
 	/**
-	 * Sets the text of the name label.
+	 * Sets the text of the you status label.
 	 * @param name The name of this device.
+	 * @param status The status of this device.
 	 */
-	private void setName(String name) {
-		mNameLabel.setText(getString(R.string.label_this_device) + name);
+	private void setYouStatus(String name, String status) {
+		mNameLabel.setText(
+				getString(R.string.label_this_device) + " " + 
+				name + " (" + status + ")");
 	}
 
 	/* (non-Javadoc)
@@ -220,7 +223,7 @@ public class P2PActivity extends Activity implements IP2PChangeListener {
 	public void onThisDeviceChange(P2PDevice device, Object sender) {
 		Log.i(TAG, "Received Notification: thisDeviceChange");
 		
-		setName(device.getName());
+		setYouStatus(device.getName(), device.getConnectionStatus());
 	}
 
 	/* (non-Javadoc)
@@ -260,6 +263,9 @@ public class P2PActivity extends Activity implements IP2PChangeListener {
 		Log.i(TAG, "Received Notification: disconnectFailure");
 		
 		setStatus("Failed to disconnect (" + reason + ")");
+		
+		if (mClosing)
+			finish();
 	}
 
 	/* (non-Javadoc)

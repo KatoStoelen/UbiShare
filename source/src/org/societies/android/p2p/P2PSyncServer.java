@@ -78,6 +78,8 @@ class P2PSyncServer extends Thread implements UpdateListener {
 					
 					if (connection != null)
 						new ClientHandler(connection).start();
+					else
+						Log.e(TAG, "Accepted connection: null");
 				} catch (InterruptedIOException e) { /* Ignore */ }
 			}
 		} catch (IOException e) {
@@ -177,7 +179,7 @@ class P2PSyncServer extends Thread implements UpdateListener {
 					Log.e(TAG, "Received request of unknown type: " +
 							request.getType());
 			} catch (InterruptedIOException e) {
-				Log.e(TAG, "Timeout while reading request");
+				Log.e(TAG, "Timeout while reading request", e);
 			} catch (InterruptedException e) {
 				Log.i(TAG, "Interrupted while waiting for lock");
 			} catch (Exception e) {

@@ -18,6 +18,7 @@ package org.societies.android.p2p;
 import org.societies.android.p2p.P2PConnection.ConnectionType;
 
 import android.bluetooth.BluetoothDevice;
+import android.util.SparseArray;
 
 /**
  * A class representing a Bluetooth device.
@@ -25,6 +26,18 @@ import android.bluetooth.BluetoothDevice;
  * @author Kato
  */
 public class BluetoothP2PDevice extends P2PDevice {
+	
+	/**
+	 * A map containing connection status messages.
+	 */
+	private static final SparseArray<String> CONNECTION_STATUS;
+	
+	static {
+		CONNECTION_STATUS = new SparseArray<String>();
+		CONNECTION_STATUS.append(BluetoothDevice.BOND_NONE, "NOT BONDED");
+		CONNECTION_STATUS.append(BluetoothDevice.BOND_BONDING, "BONDING");
+		CONNECTION_STATUS.append(BluetoothDevice.BOND_BONDED, "BONDED");
+	}
 	
 	private BluetoothDevice mDevice;
 	
@@ -49,12 +62,13 @@ public class BluetoothP2PDevice extends P2PDevice {
 	}
 
 	/**
-	 * Gets the bound state of the device.
-	 * @return The bound state of the device.
+	 * Gets the bond state of the device.
+	 * @return The bond state of the device, or <code>null</code> if
+	 * the bond state is unknown.
 	 */
 	@Override
-	public int getConnectionStatus() {
-		return mDevice.getBondState();
+	public String getConnectionStatus() {
+		return CONNECTION_STATUS.get(mDevice.getBondState());
 	}
 
 	/**
