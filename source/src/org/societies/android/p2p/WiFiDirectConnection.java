@@ -15,10 +15,12 @@
  */
 package org.societies.android.p2p;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
+import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URI;
@@ -89,9 +91,12 @@ class WiFiDirectConnection extends P2PConnection {
 	private void initialize(Socket socket) throws IOException {
 		mSocket = socket;
 		mSocket.setSoTimeout(READ_TIMEOUT);
+		mSocket.setTcpNoDelay(true);
 		
-		mReader = new DataInputStream(mSocket.getInputStream());
-		mWriter = new DataOutputStream(mSocket.getOutputStream());
+		mReader = new BufferedReader(
+				new InputStreamReader(mSocket.getInputStream()));
+		mWriter = new BufferedWriter(
+				new OutputStreamWriter(mSocket.getOutputStream()));
 		
 		mInitialized = true;
 	}
