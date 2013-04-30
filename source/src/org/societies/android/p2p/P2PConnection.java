@@ -113,13 +113,13 @@ public abstract class P2PConnection implements Parcelable {
 	}
 	
 	/**
-	 * Reads a request from the input stream of the connection.
-	 * @return The read request, or <code>null</code> if nothing was read.
-	 * @throws IOException If an error occurs while reading.
-	 * @throws InterruptedIOException If the read times out.
+	 * Receives a request from the remote host.
+	 * @return The received request, or <code>null</code> if nothing was received.
+	 * @throws IOException If an error occurs while receiving.
+	 * @throws InterruptedIOException If the receive times out.
 	 * @see P2PConnection#READ_TIMEOUT
 	 */
-	public Request readRequest() throws IOException, InterruptedIOException {
+	public Request receiveRequest() throws IOException, InterruptedIOException {
 		String serialized = readToEnd();
 		
 		Log.i(TAG, "Received request: " + serialized);
@@ -128,13 +128,13 @@ public abstract class P2PConnection implements Parcelable {
 	}
 	
 	/**
-	 * Reads a response from the input stream of the connection.
-	 * @return The read response, or <code>null</code> if nothing was read.
-	 * @throws IOException If an error occurs while reading.
-	 * @throws InterruptedIOException If the read times out.
+	 * Receives a response from the remote host.
+	 * @return The received response, or <code>null</code> if nothing was received.
+	 * @throws IOException If an error occurs while receiving.
+	 * @throws InterruptedIOException If the receive times out.
 	 * @see P2PConnection#READ_TIMEOUT
 	 */
-	public Response readResponse() throws IOException, InterruptedIOException {
+	public Response receiveResponse() throws IOException, InterruptedIOException {
 		String serialized = readToEnd();
 		
 		Log.i(TAG, "Received response: " + serialized);
@@ -143,20 +143,20 @@ public abstract class P2PConnection implements Parcelable {
 	}
 	
 	/**
-	 * Writes a request to the output stream of the connection.
-	 * @param request The request to write.
-	 * @throws IOException If an error occurs while writing.
+	 * Sends a request to the remote host.
+	 * @param request The request to send.
+	 * @throws IOException If an error occurs while sending.
 	 */
-	public void write(Request request) throws IOException {
+	public void send(Request request) throws IOException {
 		write(request.serialize());
 	}
 	
 	/**
-	 * Writes a response to the output stream of the connection.
-	 * @param response The response to write.
-	 * @throws IOException If an error occurs while writing.
+	 * Sends a response to the remote host.
+	 * @param response The response to send.
+	 * @throws IOException If an error occurs while sending.
 	 */
-	public void write(Response response) throws IOException {
+	public void send(Response response) throws IOException {
 		write(response.serialize());
 	}
 	

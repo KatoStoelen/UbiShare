@@ -131,9 +131,9 @@ class P2PSyncClient extends Thread implements UpdateListener {
 		Request handshake = new Request(mUniqueId, RequestType.HANDSHAKE);
 		
 		mConnection.connect();
-		mConnection.write(handshake);
+		mConnection.send(handshake);
 		
-		Response response = mConnection.readResponse();
+		Response response = mConnection.receiveResponse();
 		
 		mConnection.close();
 		
@@ -167,7 +167,7 @@ class P2PSyncClient extends Thread implements UpdateListener {
 			request.setUpdatedEntities(entities);
 			
 			try {
-				mConnection.write(request);
+				mConnection.send(request);
 			} finally {
 				mConnection.close();
 			}
@@ -230,7 +230,7 @@ class P2PSyncClient extends Thread implements UpdateListener {
 					try {
 						connection = mListener.acceptConnection();
 						
-						enqueueResponse(connection.readResponse());
+						enqueueResponse(connection.receiveResponse());
 					} catch (InterruptedIOException e) {
 						/* Ignore */
 					} finally {

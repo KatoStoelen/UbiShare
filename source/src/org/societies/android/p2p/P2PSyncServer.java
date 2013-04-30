@@ -167,7 +167,7 @@ class P2PSyncServer extends Thread implements UpdateListener {
 			Log.i(TAG, "ClientHandler started");
 			
 			try {
-				Request request = mConnection.readRequest();
+				Request request = mConnection.receiveRequest();
 				
 				Log.i(TAG, "Handling client: " + request.getUniqueId());
 				
@@ -226,7 +226,7 @@ class P2PSyncServer extends Thread implements UpdateListener {
 			Response response = new Response();
 			response.setEntities(entities);
 			
-			mConnection.write(response);
+			mConnection.send(response);
 		}
 
 		/**
@@ -331,7 +331,7 @@ class P2PSyncServer extends Thread implements UpdateListener {
 				mHandshakeLock.lock(LockType.UPDATE);
 				
 				connection = mPeer.connect();
-				connection.write(mResponse);
+				connection.send(mResponse);
 				
 				mPeer.setLastUpdateTimeNow();
 				
