@@ -15,12 +15,10 @@
  */
 package org.societies.android.p2p;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
-import java.io.OutputStreamWriter;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothDevice;
@@ -86,10 +84,8 @@ class BluetoothConnection extends P2PConnection {
 		mSocket = socket;
 		mDevice = mSocket.getRemoteDevice();
 		
-		mReader = new BufferedReader(
-				new InputStreamReader(mSocket.getInputStream()));
-		mWriter = new BufferedWriter(
-				new OutputStreamWriter(mSocket.getOutputStream()));
+		mReader = new DataInputStream(mSocket.getInputStream());
+		mWriter = new DataOutputStream(mSocket.getOutputStream());
 		
 		mInitialized = true;
 	}

@@ -15,8 +15,8 @@
  */
 package org.societies.android.p2p;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 
@@ -65,8 +65,8 @@ public abstract class P2PConnection implements Parcelable {
 	
 	private final ConnectionType mConnectionType;
 	
-	protected BufferedWriter mWriter;
-	protected BufferedReader mReader;
+	protected DataOutputStream mWriter;
+	protected DataInputStream mReader;
 	protected boolean mInitialized = false;
 	
 	/**
@@ -107,8 +107,7 @@ public abstract class P2PConnection implements Parcelable {
 		
 		Log.i(TAG, "Writing: " + serialized);
 		
-		mWriter.write(serialized);
-		mWriter.newLine();
+		mWriter.writeBytes(serialized);
 		mWriter.flush();
 	}
 	
