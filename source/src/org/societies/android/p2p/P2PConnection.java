@@ -105,6 +105,8 @@ public abstract class P2PConnection implements Parcelable {
 		if (!mInitialized)
 			throw new IllegalStateException("Not initialized");
 		
+		Log.i(TAG, "Writing: " + serialized);
+		
 		mWriter.write(serialized);
 		mWriter.newLine();
 		mWriter.flush();
