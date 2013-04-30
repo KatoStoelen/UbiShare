@@ -83,7 +83,8 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 				Log.i(TAG, "Starting Sync Client...");
 				
 				try {
-					stopSync(true);
+					if (isSynchronizationActive())
+						stopSync(true);
 					
 					Intent intent = new Intent(
 							mContext, P2PSyncClientService.class);
@@ -132,7 +133,7 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 		
 		mWifiP2pManager.discoverPeers(mChannel, new ActionListener() {
 			public void onSuccess() {
-				Log.i(TAG, "Peer Discovery Successful");
+				Log.i(TAG, "Peer Discovery Initiated");
 			}
 
 			public void onFailure(int reason) {
@@ -158,7 +159,7 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 		
 		mWifiP2pManager.connect(mChannel, config, new ActionListener() {
 			public void onSuccess() {
-				Log.i(TAG, "Connection Successful");
+				Log.i(TAG, "Connection Initiated");
 			}
 			
 			public void onFailure(int reason) {
@@ -179,7 +180,7 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 		
 		mWifiP2pManager.removeGroup(mChannel, new ActionListener() {
 			public void onSuccess() {
-				Log.i(TAG, "Disconnect Successful");
+				Log.i(TAG, "Disconnect Initiated");
 				mChangeListener.onDisconnectSuccess(WiFiDirectSyncManager.this);
 			}
 			
