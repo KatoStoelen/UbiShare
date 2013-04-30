@@ -23,9 +23,6 @@ import java.io.InterruptedIOException;
 import java.io.OutputStreamWriter;
 import java.util.UUID;
 
-import org.societies.android.p2p.entity.Request;
-import org.societies.android.p2p.entity.Response;
-
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.os.Parcel;
@@ -41,11 +38,6 @@ class BluetoothConnection extends P2PConnection {
 	private BluetoothDevice mDevice;
 	private UUID mServiceId;
 	private BluetoothSocket mSocket;
-	
-	private BufferedReader mReader;
-	private BufferedWriter mWriter;
-	
-	private boolean mInitialized = false;
 
 	/**
 	 * Initializes a new Bluetooth connection.
@@ -103,52 +95,16 @@ class BluetoothConnection extends P2PConnection {
 	}
 
 	@Override
-	protected String readToEnd() throws IOException, InterruptedIOException {
-		if (!mInitialized)
-			throw new IllegalStateException("Not initialized");
-		
-		StringBuilder builder = new StringBuilder();
-		String newline = System.getProperty("line.separator");
-		
-		String line;
-		while ((line = mReader.readLine()) != null)
-			builder.append(line + newline);
-		
-		return builder.toString();
-	}
-
-	@Override
-	public void write(Request request) throws IOException {
-		if (!mInitialized)
-			throw new IllegalStateException("Not initialized");
-		
-		mWriter.write(request.serialize());
-		mWriter.flush();
-	}
-
-	@Override
-	public void write(Response response) throws IOException {
-		if (!mInitialized)
-			throw new IllegalStateException("Not initialized");
-		
-		mWriter.write(response.serialize());
-		mWriter.flush();
-	}
-
-	@Override
 	public void close() throws IOException {
 		IOException lastException = null;
 		
 		try {
-			if (mReader != null) mReader.close();
+			super.close();
 		} catch (IOException e) { lastException = e; }
 		
 		try {
-			if (mWriter != null) mWriter.close();
-		} catch (IOException e) { lastException = e; }
-		
-		try {
-			if (mSocket != null) mSocket.close();
+			if (mSocket != null)
+				mSocket.close();
 		} catch (IOException e) { lastException = e; }
 		
 		if (lastException != null)

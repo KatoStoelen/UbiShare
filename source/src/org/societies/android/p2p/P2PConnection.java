@@ -15,6 +15,8 @@
  */
 package org.societies.android.p2p;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 
@@ -58,7 +60,14 @@ public abstract class P2PConnection implements Parcelable {
 	 */
 	public static final int CONNECTION_TIMEOUT = 5000;
 	
+	/** The new-line character of the system. */
+	private static final String NEW_LINE = System.getProperty("line.separator");
+	
 	private final ConnectionType mConnectionType;
+	
+	protected BufferedWriter mWriter;
+	protected BufferedReader mReader;
+	protected boolean mInitialized = false;
 	
 	/**
 	 * Initializes a new P2P connection.
@@ -74,24 +83,32 @@ public abstract class P2PConnection implements Parcelable {
 	 * @throws IOException If an error occurs while reading.
 	 * @throws InterruptedIOException If the read times out.
 	 */
-	protected abstract String readToEnd() throws IOException, InterruptedIOException;
+	private String readToEnd() throws IOException, InterruptedIOException {
+		if (!mInitialized)
+			throw new IllegalStateException("Not initialized");
+		
+		StringBuilder builder = new StringBuilder();
+		
+		String line;
+		while ((line = mReader.readLine()) != null)
+			builder.append(line + NEW_LINE);
+		
+		return builder.toString();
+	}
 	
 	/**
-	 * Checks whether or not the connection is established.
-	 * @return <code>true</code> if the connection is established, otherwise
-	 * <code>false</code>.
+	 * Writes the specified string to the output stream of the connection.
+	 * @param serialized The serialized request or response.
+	 * @throws IOException IF an error occurs while writing.
 	 */
-	public abstract boolean isConnected();
-	
-	/**
-	 * Tries to establish a connection with the remote host. If the connection
-	 * is already established, the connection is closed and re-opened.
-	 * @return Whether or not the connection was successfully made.
-	 * @throws IOException If an error occurs while connecting.
-	 * @throws InterruptedIOException If the connection attempt times out.
-	 * @see P2PConnection#CONNECTION_TIMEOUT
-	 */
-	public abstract boolean connect() throws IOException, InterruptedIOException;
+	private void write(String serialized) throws IOException {
+		if (!mInitialized)
+			throw new IllegalStateException("Not initialized");
+		
+		mWriter.write(serialized);
+		mWriter.newLine();
+		mWriter.flush();
+	}
 	
 	/**
 	 * Reads a request from the input stream of the connection.
@@ -128,20 +145,39 @@ public abstract class P2PConnection implements Parcelable {
 	 * @param request The request to write.
 	 * @throws IOException If an error occurs while writing.
 	 */
-	public abstract void write(Request request) throws IOException;
+	public void write(Request request) throws IOException {
+		write(request.serialize());
+	}
 	
 	/**
 	 * Writes a response to the output stream of the connection.
 	 * @param response The response to write.
 	 * @throws IOException If an error occurs while writing.
 	 */
-	public abstract void write(Response response) throws IOException;
+	public void write(Response response) throws IOException {
+		write(response.serialize());
+	}
 	
 	/**
 	 * Closes the connection.
 	 * @throws IOException If an error occurs while closing the connection.
 	 */
-	public abstract void close() throws IOException;
+	public void close() throws IOException {
+		IOException lastException = null;
+		
+		try {
+			if (mWriter != null)
+				mWriter.close();
+		} catch (IOException e) { lastException = e; }
+		
+		try {
+			if (mReader != null)
+				mReader.close();
+		} catch (IOException e) { lastException = e; }
+		
+		if (lastException != null)
+			throw lastException;
+	}
 
 	/**
 	 * Gets the type of the P2P connection.
@@ -150,4 +186,21 @@ public abstract class P2PConnection implements Parcelable {
 	public ConnectionType getConnectionType() {
 		return mConnectionType;
 	}
+	
+	/**
+	 * Tries to establish a connection with the remote host. If the connection
+	 * is already established, the connection is closed and re-opened.
+	 * @return Whether or not the connection was successfully made.
+	 * @throws IOException If an error occurs while connecting.
+	 * @throws InterruptedIOException If the connection attempt times out.
+	 * @see P2PConnection#CONNECTION_TIMEOUT
+	 */
+	public abstract boolean connect() throws IOException, InterruptedIOException;
+	
+	/**
+	 * Checks whether or not the connection is established.
+	 * @return <code>true</code> if the connection is established, otherwise
+	 * <code>false</code>.
+	 */
+	public abstract boolean isConnected();
 }

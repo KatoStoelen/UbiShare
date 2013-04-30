@@ -26,8 +26,6 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import org.societies.android.p2p.entity.Request;
-import org.societies.android.p2p.entity.Response;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -45,10 +43,6 @@ class WiFiDirectConnection extends P2PConnection {
 	private Socket mSocket;
 	private InetSocketAddress mRemoteAddress;
 	
-	private BufferedReader mReader;
-	private BufferedWriter mWriter;
-	
-	private boolean mInitialized = false;
 	private boolean mConnectRequired = true;
 	
 	/**
@@ -107,67 +101,6 @@ class WiFiDirectConnection extends P2PConnection {
 	}
 	
 	@Override
-	protected String readToEnd() throws IOException, InterruptedIOException {
-		if (!mInitialized)
-			throw new IllegalStateException("Not initialized");
-		
-		StringBuilder builder = new StringBuilder();
-		String newline = System.getProperty("line.separator");
-		
-		String line;
-		while ((line = mReader.readLine()) != null)
-			builder.append(line + newline);
-		
-		return builder.toString();
-	}
-	
-	@Override
-	public void write(Request request) throws IOException {
-		if (!mInitialized)
-			throw new IllegalStateException("Not initialized");
-		
-		String serialized = request.serialize();
-		
-		Log.i(TAG, "Writing request: " + serialized);
-		
-		mWriter.write(serialized);
-		mWriter.flush();
-	}
-
-	@Override
-	public void write(Response response) throws IOException {
-		if (!mInitialized)
-			throw new IllegalStateException("Not initialized");
-		
-		String serialized = response.serialize();
-		
-		Log.i(TAG, "Writing response: " + serialized);
-		
-		mWriter.write(serialized);
-		mWriter.flush();
-	}
-
-	@Override
-	public void close() throws IOException {
-		IOException lastException = null;
-		
-		try {
-			if (mReader != null) mReader.close();
-		} catch (IOException e) { lastException = e; }
-		
-		try {
-			if (mWriter != null) mWriter.close();
-		} catch (IOException e) { lastException = e; }
-		
-		try {
-			if (mSocket != null) mSocket.close();
-		} catch (IOException e) { lastException = e; }
-		
-		if (lastException != null)
-			throw lastException;
-	}
-	
-	@Override
 	public boolean isConnected() {
 		return (mSocket != null && mSocket.isConnected());
 	}
@@ -188,6 +121,23 @@ class WiFiDirectConnection extends P2PConnection {
 		} else {
 			return false;
 		}
+	}
+	
+	@Override
+	public void close() throws IOException {
+		IOException lastException = null;
+		
+		try {
+			super.close();
+		} catch (IOException e) { lastException = e; }
+		
+		try {
+			if (mSocket != null)
+				mSocket.close();
+		} catch (IOException e) { lastException = e; }
+		
+		if (lastException != null)
+			throw lastException;
 	}
 	
 	/**
