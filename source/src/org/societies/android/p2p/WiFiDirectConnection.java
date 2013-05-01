@@ -15,12 +15,10 @@
  */
 package org.societies.android.p2p;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
-import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URI;
@@ -91,12 +89,10 @@ class WiFiDirectConnection extends P2PConnection {
 	private void initialize(Socket socket) throws IOException {
 		mSocket = socket;
 		mSocket.setSoTimeout(READ_TIMEOUT);
-		mSocket.setTcpNoDelay(true);
+		//mSocket.setTcpNoDelay(true);
 		
-		mReader = new BufferedReader(
-				new InputStreamReader(mSocket.getInputStream()));
-		mWriter = new BufferedWriter(
-				new OutputStreamWriter(mSocket.getOutputStream()));
+		mReader = new DataInputStream(mSocket.getInputStream());
+		mWriter = new DataOutputStream(mSocket.getOutputStream());
 		
 		mInitialized = true;
 	}
@@ -151,14 +147,21 @@ class WiFiDirectConnection extends P2PConnection {
 			try {
 				String socketAddress =
 						mSocket.getRemoteSocketAddress().toString();
+				
+				Log.i(TAG, "SocketAddress: " + socketAddress);
+				
 				URI address = new URI("my://" + socketAddress);
 				
 				return address.getHost();
 			} catch (URISyntaxException e) {
+				Log.e(TAG, e.getMessage(), e);
 				return null;
 			}
+		} else {
+			Log.i(TAG, "Not connected");
+			
+			return null;
 		}
-		else return null;
 	}
 
 	/* (non-Javadoc)
