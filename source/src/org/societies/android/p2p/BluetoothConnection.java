@@ -15,8 +15,6 @@
  */
 package org.societies.android.p2p;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.util.UUID;
@@ -36,6 +34,8 @@ class BluetoothConnection extends P2PConnection {
 	private BluetoothDevice mDevice;
 	private UUID mServiceId;
 	private BluetoothSocket mSocket;
+	
+	private boolean mConnectRequired = true;
 
 	/**
 	 * Initializes a new Bluetooth connection.
@@ -46,6 +46,8 @@ class BluetoothConnection extends P2PConnection {
 		super(ConnectionType.BLUETOOTH);
 		
 		initialize(socket);
+		
+		mConnectRequired = false;
 	}
 	
 	/**
@@ -84,10 +86,8 @@ class BluetoothConnection extends P2PConnection {
 		mSocket = socket;
 		mDevice = mSocket.getRemoteDevice();
 		
-		mReader = new DataInputStream(mSocket.getInputStream());
-		mWriter = new DataOutputStream(mSocket.getOutputStream());
-		
-		mInitialized = true;
+		setInputStream(mSocket.getInputStream());
+		setOutputStream(mSocket.getOutputStream());
 	}
 
 	@Override
@@ -114,14 +114,13 @@ class BluetoothConnection extends P2PConnection {
 
 	@Override
 	public boolean connect() throws IOException, InterruptedIOException {
-		if (isConnected())
-			close();
-		
-		BluetoothSocket socket =
-				mDevice.createRfcommSocketToServiceRecord(mServiceId);
-		socket.connect();
-		
-		initialize(socket);
+		if (mConnectRequired && !isConnected()) {
+			BluetoothSocket socket =
+					mDevice.createRfcommSocketToServiceRecord(mServiceId);
+			socket.connect();
+			
+			initialize(socket);
+		}
 		
 		return isConnected();
 	}

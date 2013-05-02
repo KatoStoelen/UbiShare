@@ -18,13 +18,14 @@ package org.societies.android.p2p;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InterruptedIOException;
+import java.io.OutputStream;
 
 import org.societies.android.p2p.entity.Request;
 import org.societies.android.p2p.entity.Response;
 
 import android.os.Parcelable;
-import android.util.Log;
 
 /**
  * Base class of all peer-to-peer connections.
@@ -60,14 +61,11 @@ public abstract class P2PConnection implements Parcelable {
 	 */
 	public static final int CONNECTION_TIMEOUT = 5000;
 	
-	/** The new-line character of the system. */
-	private static final String NEW_LINE = System.getProperty("line.separator");
-	
 	private final ConnectionType mConnectionType;
 	
-	protected DataOutputStream mWriter;
-	protected DataInputStream mReader;
-	protected boolean mInitialized = false;
+	private DataOutputStream mWriter;
+	private DataInputStream mReader;
+	private boolean mInitialized = false;
 	
 	/**
 	 * Initializes a new P2P connection.
@@ -78,12 +76,36 @@ public abstract class P2PConnection implements Parcelable {
 	}
 	
 	/**
-	 * Reads to the end of the stream.
-	 * @return The read data as a string.
-	 * @throws IOException If an error occurs while reading.
-	 * @throws InterruptedIOException If the read times out.
+	 * Sets the input stream of the connection. Subclasses needs to
+	 * set both I/O stream before the connection is usable.
+	 * @param in The input stream.
+	 * @see P2PConnection#setOutputStream(OutputStream)
 	 */
-	private String readToEnd() throws IOException, InterruptedIOException {
+	protected void setInputStream(InputStream in) {
+		mReader = new DataInputStream(in);
+		
+		mInitialized = (mReader != null && mWriter != null);
+	}
+	
+	/**
+	 * Sets the output stream of the connection. Subclasses needs to
+	 * set both I/O stream before the connection is usable.
+	 * @param out The output stream.
+	 * @see P2PConnection#setInputStream(InputStream)
+	 */
+	protected void setOutputStream(OutputStream out) {
+		mWriter = new DataOutputStream(out);
+		
+		mInitialized = (mReader != null && mWriter != null);
+	}
+	
+	/**
+	 * Reads a string from the input stream.
+	 * @return The read string.
+	 * @throws IOException If an error occurs while reading.
+	 * @throws InterruptedIOException If a timeout occurs while reading.
+	 */
+	private String readString() throws IOException, InterruptedIOException {
 		if (!mInitialized)
 			throw new IllegalStateException("Not initialized");
 		
@@ -98,13 +120,11 @@ public abstract class P2PConnection implements Parcelable {
 	/**
 	 * Writes the specified string to the output stream of the connection.
 	 * @param serialized The serialized request or response.
-	 * @throws IOException IF an error occurs while writing.
+	 * @throws IOException If an error occurs while writing.
 	 */
 	private void write(String serialized) throws IOException {
 		if (!mInitialized)
 			throw new IllegalStateException("Not initialized");
-		
-		Log.i(TAG, "Writing: " + serialized);
 		
 		byte[] buffer = serialized.getBytes();
 		
@@ -121,9 +141,7 @@ public abstract class P2PConnection implements Parcelable {
 	 * @see P2PConnection#READ_TIMEOUT
 	 */
 	public Request receiveRequest() throws IOException, InterruptedIOException {
-		String serialized = readToEnd();
-		
-		Log.i(TAG, "Received request: " + serialized);
+		String serialized = readString();
 		
 		return Request.deserialize(serialized);
 	}
@@ -136,9 +154,7 @@ public abstract class P2PConnection implements Parcelable {
 	 * @see P2PConnection#READ_TIMEOUT
 	 */
 	public Response receiveResponse() throws IOException, InterruptedIOException {
-		String serialized = readToEnd();
-		
-		Log.i(TAG, "Received response: " + serialized);
+		String serialized = readString();
 		
 		return Response.deserialize(serialized);
 	}

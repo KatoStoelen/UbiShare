@@ -15,8 +15,6 @@
  */
 package org.societies.android.p2p;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.InetSocketAddress;
@@ -89,12 +87,9 @@ class WiFiDirectConnection extends P2PConnection {
 	private void initialize(Socket socket) throws IOException {
 		mSocket = socket;
 		mSocket.setSoTimeout(READ_TIMEOUT);
-		//mSocket.setTcpNoDelay(true);
 		
-		mReader = new DataInputStream(mSocket.getInputStream());
-		mWriter = new DataOutputStream(mSocket.getOutputStream());
-		
-		mInitialized = true;
+		setInputStream(mSocket.getInputStream());
+		setOutputStream(mSocket.getOutputStream());
 	}
 	
 	@Override
@@ -104,20 +99,15 @@ class WiFiDirectConnection extends P2PConnection {
 
 	@Override
 	public boolean connect() throws IOException, InterruptedIOException {
-		if (mConnectRequired) {
-			if (isConnected())
-				close();
-			
+		if (mConnectRequired && !isConnected()) {
 			Log.i(TAG, "Connecting to: " + mRemoteAddress);
 			
 			Socket socket = new Socket();
 			socket.connect(mRemoteAddress, CONNECTION_TIMEOUT);
 			initialize(socket);
-			
-			return isConnected();
-		} else {
-			return false;
 		}
+		
+		return isConnected();
 	}
 	
 	@Override
@@ -146,7 +136,8 @@ class WiFiDirectConnection extends P2PConnection {
 		if (isConnected()) {
 			try {
 				String socketAddress =
-						mSocket.getRemoteSocketAddress().toString();
+						mSocket.getRemoteSocketAddress()
+						.toString().replace("/", new String());
 				
 				Log.i(TAG, "SocketAddress: " + socketAddress);
 				
