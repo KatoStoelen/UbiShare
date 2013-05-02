@@ -41,18 +41,23 @@ public class P2PSyncClientService extends Service implements ISyncService {
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		P2PConnection connection =
-				(P2PConnection) intent.getParcelableExtra(EXTRA_CONNECTION);
-		P2PConnectionListener listener =
-				(P2PConnectionListener) intent.getParcelableExtra(EXTRA_LISTENER);
-		String uniqueId = intent.getStringExtra(EXTRA_UNIQUE_ID);
-		
-		if (mSyncClient == null) {
-			mSyncClient = new P2PSyncClient(uniqueId, connection, listener, this);
-			mSyncClient.start();
+		if (!IS_RUNNING) {
+			P2PConnection connection =
+					(P2PConnection) intent.getParcelableExtra(
+							EXTRA_CONNECTION);
+			P2PConnectionListener listener =
+					(P2PConnectionListener) intent.getParcelableExtra(
+							EXTRA_LISTENER);
+			String uniqueId = intent.getStringExtra(EXTRA_UNIQUE_ID);
+			
+			if (mSyncClient == null) {
+				mSyncClient = new P2PSyncClient(
+						uniqueId, connection, listener, this);
+				mSyncClient.start();
+			}
+			
+			IS_RUNNING = true;
 		}
-		
-		IS_RUNNING = true;
 		
 		return START_STICKY;
 	}
@@ -66,7 +71,7 @@ public class P2PSyncClientService extends Service implements ISyncService {
 	public void onDestroy() {
 		super.onDestroy();
 		
-		stopSync(true);
+		stopSyncClient(false);
 		
 		IS_RUNNING = false;
 	}
@@ -75,9 +80,22 @@ public class P2PSyncClientService extends Service implements ISyncService {
 	 * @see org.societies.android.p2p.ISyncService#stopSync(boolean)
 	 */
 	public void stopSync(boolean awaitTermination) {
+		stopSyncClient(awaitTermination);
+		
+		stopSelf();
+	}
+	
+	/**
+	 * Stops the sync client.
+	 * @param awaitTermination Whether or not to block until the sync
+	 * server has terminated.
+	 */
+	private void stopSyncClient(boolean awaitTermination) {
 		try {
 			if (mSyncClient != null)
 				mSyncClient.stopSyncClient(awaitTermination);
 		} catch (InterruptedException e) { /* Ignore */ }
+		
+		mSyncClient = null;
 	}
 }

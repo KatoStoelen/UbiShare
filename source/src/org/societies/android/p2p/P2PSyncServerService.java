@@ -37,16 +37,18 @@ public class P2PSyncServerService extends Service implements ISyncService {
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		P2PConnectionListener listener =
-				(P2PConnectionListener) intent.getParcelableExtra(
-						EXTRA_CONNECTION_LISTENER);
-		
-		if (mSyncServer == null) {
-			mSyncServer = new P2PSyncServer(this, listener);
-			mSyncServer.start();
+		if (!IS_RUNNING) {
+			P2PConnectionListener listener =
+					(P2PConnectionListener) intent.getParcelableExtra(
+							EXTRA_CONNECTION_LISTENER);
+			
+			if (mSyncServer == null) {
+				mSyncServer = new P2PSyncServer(this, listener);
+				mSyncServer.start();
+			}
+			
+			IS_RUNNING = true;
 		}
-		
-		IS_RUNNING = true;
 		
 		return START_STICKY;
 	}
@@ -60,7 +62,7 @@ public class P2PSyncServerService extends Service implements ISyncService {
 	public void onDestroy() {
 		super.onDestroy();
 		
-		stopSync(true);
+		stopSyncServer(false);
 		
 		IS_RUNNING = false;
 	}
@@ -70,9 +72,22 @@ public class P2PSyncServerService extends Service implements ISyncService {
 	 * @see org.societies.android.p2p.ISyncService#stopSync(boolean)
 	 */
 	public void stopSync(boolean awaitTermination) {
+		stopSyncServer(awaitTermination);
+		
+		stopSelf();
+	}
+
+	/**
+	 * Stops the sync server.
+	 * @param awaitTermination Whether or not to block until the sync
+	 * server has terminated.
+	 */
+	private void stopSyncServer(boolean awaitTermination) {
 		try {
 			if (mSyncServer != null)
 				mSyncServer.stopServer(awaitTermination);
 		} catch (InterruptedException e) { /* Ignore */ }
+		
+		mSyncServer = null;
 	}
 }

@@ -64,9 +64,6 @@ public abstract class P2PSyncManager {
 		CLIENT
 	}
 	
-	/** The error message when not initialized. */
-	protected static final String ERROR_NOT_INITIALIZED = "Not initialized";
-	
 	private final Object mTerminationLock = new Object();
 	
 	private final ConnectionType mConnectionType;
@@ -85,7 +82,8 @@ public abstract class P2PSyncManager {
 	 * @param context The context to use.
 	 * @param connectionType The type of connection to use.
 	 * @param changeListener The listener to notify of P2P changes.
-	 * @see P2PSyncManager#initialize();
+	 * @see P2PSyncManager#initialize()
+	 * @see P2PSyncManager#getSyncManager(Context, IP2PChangeListener, ConnectionType)
 	 */
 	protected P2PSyncManager(
 			Context context,
@@ -105,6 +103,16 @@ public abstract class P2PSyncManager {
 		mServiceConnection = getServiceConnection();
 		
 		mInitialized = true;
+	}
+	
+	/**
+	 * Throws an <code>IllegalStateException</code> it the sync manager is
+	 * not initialized.
+	 * @throws IllegalStateException If the sync manager is not initialized.
+	 */
+	protected void throwIfNotInitialized() throws IllegalStateException {
+		if (!mInitialized)
+			throw new IllegalStateException("Not initialized: Call initialize()");
 	}
 	
 	/**

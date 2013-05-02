@@ -100,14 +100,23 @@ public abstract class P2PConnection implements Parcelable {
 	}
 	
 	/**
+	 * Throws an <code>IllegalStateException</code> if the connection is
+	 * not initialized.
+	 * @throws IllegalStateException If the connection is not initialized.
+	 */
+	private void throwIfNotInitialized() throws IllegalStateException {
+		if (!mInitialized)
+			throw new IllegalStateException("Not initialized: Set both I/O streams");
+	}
+	
+	/**
 	 * Reads a string from the input stream.
 	 * @return The read string.
 	 * @throws IOException If an error occurs while reading.
 	 * @throws InterruptedIOException If a timeout occurs while reading.
 	 */
 	private String readString() throws IOException, InterruptedIOException {
-		if (!mInitialized)
-			throw new IllegalStateException("Not initialized");
+		throwIfNotInitialized();
 		
 		int bufferLength = mReader.readInt();
 		byte[] buffer = new byte[bufferLength];
@@ -116,15 +125,14 @@ public abstract class P2PConnection implements Parcelable {
 		
 		return new String(buffer);
 	}
-	
+
 	/**
 	 * Writes the specified string to the output stream of the connection.
 	 * @param serialized The serialized request or response.
 	 * @throws IOException If an error occurs while writing.
 	 */
 	private void write(String serialized) throws IOException {
-		if (!mInitialized)
-			throw new IllegalStateException("Not initialized");
+		throwIfNotInitialized();
 		
 		byte[] buffer = serialized.getBytes();
 		

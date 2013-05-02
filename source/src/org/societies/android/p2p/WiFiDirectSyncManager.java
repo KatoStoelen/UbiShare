@@ -82,27 +82,19 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 			public void run() {
 				Log.i(TAG, "Starting Sync Client...");
 				
-				try {
-					if (isSynchronizationActive())
-						stopSync(true);
-					
-					Intent intent = new Intent(
-							mContext, P2PSyncClientService.class);
-					intent.putExtra(
-							P2PSyncClientService.EXTRA_CONNECTION,
-							new WiFiDirectConnection(groupOwnerAddress));
-					intent.putExtra(
-							P2PSyncClientService.EXTRA_LISTENER,
-							new WiFiDirectConnectionListener(
-									P2PConstants.WIFI_DIRECT_CLIENT_PORT));
-					intent.putExtra(
-							P2PSyncClientService.EXTRA_UNIQUE_ID, getUniqueId());
-					
-					mContext.startService(intent);
-				} catch (InterruptedException e) {
-					Log.e(TAG, "Could not start sync client: Interrupted while " +
-							"awaiting sync client termination");
-				}
+				Intent intent = new Intent(
+						mContext, P2PSyncClientService.class);
+				intent.putExtra(
+						P2PSyncClientService.EXTRA_CONNECTION,
+						new WiFiDirectConnection(groupOwnerAddress));
+				intent.putExtra(
+						P2PSyncClientService.EXTRA_LISTENER,
+						new WiFiDirectConnectionListener(
+								P2PConstants.WIFI_DIRECT_CLIENT_PORT));
+				intent.putExtra(
+						P2PSyncClientService.EXTRA_UNIQUE_ID, getUniqueId());
+				
+				mContext.startService(intent);
 			}
 		}).start();
 	}
@@ -126,8 +118,7 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 
 	@Override
 	public void discoverPeers() {
-		if (!mInitialized)
-			throw new IllegalStateException(ERROR_NOT_INITIALIZED);
+		throwIfNotInitialized();
 		
 		Log.i(TAG, "Discovering peers...");
 		
@@ -147,8 +138,7 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 
 	@Override
 	public void connectTo(P2PDevice device) {
-		if (!mInitialized)
-			throw new IllegalStateException(ERROR_NOT_INITIALIZED);
+		throwIfNotInitialized();
 		
 		Log.i(TAG, "Connecting to device " + device.getName() +
 				" (" + device.getAddress() + ")...");
@@ -173,8 +163,7 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 	
 	@Override
 	public void disconnect() {
-		if (!mInitialized)
-			throw new IllegalStateException(ERROR_NOT_INITIALIZED);
+		throwIfNotInitialized();
 		
 		Log.i(TAG, "Disconnecting...");
 		
@@ -237,18 +226,22 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 		
 		mConnected = info.groupFormed;
 		
-		if (info.groupFormed && info.isGroupOwner) {
-			startSyncServer();
-			
-			mChangeListener.onConnectionSuccess(SyncRole.SERVER, this);
-		} else if (info.groupFormed) {
-			InetAddress groupOwnerAddress = info.groupOwnerAddress;
-			InetSocketAddress socketAddress = new InetSocketAddress(
-					groupOwnerAddress, P2PConstants.WIFI_DIRECT_SERVER_PORT);
-			
-			startSyncClient(socketAddress);
-			
-			mChangeListener.onConnectionSuccess(SyncRole.CLIENT, this);
+		if (isSynchronizationActive()) {
+			Log.i(TAG, "Synchronization is already running");
+		} else {
+			if (info.groupFormed && info.isGroupOwner) {
+				startSyncServer();
+				
+				mChangeListener.onConnectionSuccess(SyncRole.SERVER, this);
+			} else if (info.groupFormed) {
+				InetAddress groupOwnerAddress = info.groupOwnerAddress;
+				InetSocketAddress socketAddress = new InetSocketAddress(
+						groupOwnerAddress, P2PConstants.WIFI_DIRECT_SERVER_PORT);
+				
+				startSyncClient(socketAddress);
+				
+				mChangeListener.onConnectionSuccess(SyncRole.CLIENT, this);
+			}
 		}
 	}
 }
