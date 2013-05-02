@@ -84,6 +84,11 @@ class P2PSyncServer extends Thread implements UpdateListener {
 			}
 		} catch (IOException e) {
 			Log.e(TAG, e.getMessage(), e);
+		} finally {
+			try {
+				if (mListener != null)
+					mListener.close();
+			} catch (IOException e) { /* Ignore */ }
 		}
 		
 		Log.i(TAG, "P2PSyncServer terminated");
