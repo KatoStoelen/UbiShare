@@ -61,6 +61,10 @@ class P2PSyncServer extends Thread implements UpdateListener {
 		mPoller = new UpdatePoller(context, this);
 		mPeers = new PeerList();
 		mStopping = false;
+		
+		// TODO: FIGURE OUT THE ACCOUNT NAME AND TYPE
+		Entity.SELECTION_ACCOUNT_NAME = "p2p";
+		Entity.SELECTION_ACCOUNT_TYPE = "p2p";
 	}
 
 	@Override

@@ -71,6 +71,10 @@ class P2PSyncClient extends Thread implements UpdateListener {
 		mPoller = new UpdatePoller(context, this);
 		mUpdateQueue = new LinkedList<Collection<Entity>>();
 		mStopping = false;
+		
+		// TODO: FIGURE OUT THE ACCOUNT NAME AND TYPE
+		Entity.SELECTION_ACCOUNT_NAME = "p2p";
+		Entity.SELECTION_ACCOUNT_TYPE = "p2p";
 	}
 	
 	@Override
