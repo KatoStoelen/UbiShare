@@ -20,7 +20,6 @@ import java.io.InterruptedIOException;
 import java.util.Collection;
 
 import org.societies.android.p2p.HandshakeLock.LockType;
-import org.societies.android.p2p.P2PConnection.ConnectionType;
 import org.societies.android.p2p.UpdatePoller.UpdateListener;
 import org.societies.android.p2p.entity.Request;
 import org.societies.android.p2p.entity.Request.RequestType;

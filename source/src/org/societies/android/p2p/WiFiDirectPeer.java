@@ -19,8 +19,6 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.InetSocketAddress;
 
-import org.societies.android.p2p.P2PConnection.ConnectionType;
-
 /**
  * Class representing a WiFi Direct peer.
  * 

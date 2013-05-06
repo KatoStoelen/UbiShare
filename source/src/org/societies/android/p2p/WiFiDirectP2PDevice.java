@@ -15,8 +15,6 @@
  */
 package org.societies.android.p2p;
 
-import org.societies.android.p2p.P2PConnection.ConnectionType;
-
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.util.SparseArray;
 

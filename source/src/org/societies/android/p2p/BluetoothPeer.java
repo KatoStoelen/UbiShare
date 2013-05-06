@@ -19,8 +19,6 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.util.UUID;
 
-import org.societies.android.p2p.P2PConnection.ConnectionType;
-
 import android.bluetooth.BluetoothDevice;
 
 /**

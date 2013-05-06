@@ -32,20 +32,9 @@ import android.os.Parcelable;
  * 
  * @author Kato
  */
-public abstract class P2PConnection implements Parcelable {
+abstract class P2PConnection implements Parcelable {
 	
 	public static final String TAG = "P2PConnection";
-	
-	/**
-	 * An enum of supported connection types.
-	 */
-	public enum ConnectionType {
-		/** Specifies Bluetooth as communication channel. */
-		BLUETOOTH,
-		
-		/** Specifies WiFi Direct as communication channel. */
-		WIFI_DIRECT
-	}
 	
 	/**
 	 * The number of milliseconds before a read call times out and a

@@ -20,8 +20,6 @@ import java.io.InterruptedIOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import org.societies.android.p2p.P2PConnection.ConnectionType;
-
 import android.os.Parcel;
 import android.os.Parcelable;
 

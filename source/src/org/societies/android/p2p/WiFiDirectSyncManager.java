@@ -19,8 +19,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.List;
 
-import org.societies.android.p2p.P2PConnection.ConnectionType;
-
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;

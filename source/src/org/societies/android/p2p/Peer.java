@@ -18,8 +18,6 @@ package org.societies.android.p2p;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 
-import org.societies.android.p2p.P2PConnection.ConnectionType;
-
 /**
  * Base class of a peer in a peer-to-peer network.
  * 
