@@ -84,7 +84,7 @@ public abstract class P2PConnection implements Parcelable {
 	protected void setInputStream(InputStream in) {
 		mReader = new DataInputStream(in);
 		
-		mInitialized = (mReader != null && mWriter != null);
+		setInitialized();
 	}
 	
 	/**
@@ -96,6 +96,14 @@ public abstract class P2PConnection implements Parcelable {
 	protected void setOutputStream(OutputStream out) {
 		mWriter = new DataOutputStream(out);
 		
+		setInitialized();
+	}
+	
+	/**
+	 * Marks the connection as initialized if both I/O streams are
+	 * set.
+	 */
+	private void setInitialized() {
 		mInitialized = (mReader != null && mWriter != null);
 	}
 	
@@ -106,7 +114,7 @@ public abstract class P2PConnection implements Parcelable {
 	 */
 	private void throwIfNotInitialized() throws IllegalStateException {
 		if (!mInitialized)
-			throw new IllegalStateException("Not initialized: Set both I/O streams");
+			throw new IllegalStateException("Connection is either closed or not initialized");
 	}
 	
 	/**
@@ -190,17 +198,21 @@ public abstract class P2PConnection implements Parcelable {
 	 * @throws IOException If an error occurs while closing the connection.
 	 */
 	public void close() throws IOException {
+		mInitialized = false;
+		
 		IOException lastException = null;
 		
 		try {
 			if (mWriter != null)
 				mWriter.close();
 		} catch (IOException e) { lastException = e; }
+		mWriter = null;
 		
 		try {
 			if (mReader != null)
 				mReader.close();
 		} catch (IOException e) { lastException = e; }
+		mReader = null;
 		
 		if (lastException != null)
 			throw lastException;
@@ -223,11 +235,4 @@ public abstract class P2PConnection implements Parcelable {
 	 * @see P2PConnection#CONNECTION_TIMEOUT
 	 */
 	public abstract boolean connect() throws IOException, InterruptedIOException;
-	
-	/**
-	 * Checks whether or not the connection is established.
-	 * @return <code>true</code> if the connection is established, otherwise
-	 * <code>false</code>.
-	 */
-	public abstract boolean isConnected();
 }

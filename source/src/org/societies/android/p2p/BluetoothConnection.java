@@ -107,14 +107,18 @@ class BluetoothConnection extends P2PConnection {
 			throw lastException;
 	}
 
-	@Override
-	public boolean isConnected() {
+	/**
+	 * Checks whether or not the connection has been closed.
+	 * @return <code>true</code> if the connection has been closed,
+	 * otherwise <code>false</code>.
+	 */
+	private boolean isClosed() {
 		return (mSocket != null && mSocket.isConnected());
 	}
 
 	@Override
 	public boolean connect() throws IOException, InterruptedIOException {
-		if (mConnectRequired && !isConnected()) {
+		if (mConnectRequired && isClosed()) {
 			BluetoothSocket socket =
 					mDevice.createRfcommSocketToServiceRecord(mServiceId);
 			socket.connect();
@@ -122,7 +126,7 @@ class BluetoothConnection extends P2PConnection {
 			initialize(socket);
 		}
 		
-		return isConnected();
+		return isClosed();
 	}
 	
 	/**

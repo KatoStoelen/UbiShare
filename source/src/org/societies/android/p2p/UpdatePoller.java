@@ -50,6 +50,7 @@ class UpdatePoller extends Thread {
 	
 	private final Context mContext;
 	private final UpdateListener mListener;
+	private final Collection<Entity> mPendingEntities;
 	private boolean mStopping;
 	
 	/**
@@ -60,6 +61,8 @@ class UpdatePoller extends Thread {
 		mContext = context;
 		mListener = listener;
 		mStopping = false;
+		
+		mPendingEntities = new ArrayList<Entity>();
 	}
 	
 	@Override
@@ -68,11 +71,15 @@ class UpdatePoller extends Thread {
 		
 		try {
 			while (!mStopping) {
-				Collection<Entity> updatedEntities = processGlobalIds(
-						Entity.getUpdatedEntities(mContext.getContentResolver()));
+				Collection<Entity> updatedEntities = getUpdatedEntities();
 				
-				if (updatedEntities.size() > 0)
+				if (updatedEntities.size() > 0) {
+					synchronized (mPendingEntities) {
+						mPendingEntities.addAll(updatedEntities);
+					}
+					
 					mListener.onEntitiesAvailable(updatedEntities);
+				}
 				
 				Thread.sleep(POLL_INTERVAL);
 			}
@@ -91,6 +98,10 @@ class UpdatePoller extends Thread {
 	 * @param entities The entities to reset dirty flag of.
 	 */
 	public void resetEntityDirtyFlag(Collection<Entity> entities) {
+		synchronized (mPendingEntities) {
+			mPendingEntities.removeAll(entities);
+		}
+		
 		for (Entity entity : entities) {
 			entity.setDirtyFlag(0);
 			entity.insert(mContext.getContentResolver());
@@ -105,6 +116,50 @@ class UpdatePoller extends Thread {
 		
 		if (getState() == State.TIMED_WAITING);
 			interrupt();
+	}
+	
+	/**
+	 * Gets the updated entities that are not in the pending list.
+	 * @return A list of updated entities.
+	 * @throws Exception If an error occurs while fetching entities.
+	 */
+	private Collection<Entity> getUpdatedEntities() throws Exception {
+		Collection<Entity> updatedEntities =
+				Entity.getUpdatedEntities(mContext.getContentResolver());
+		updatedEntities = removePendingEntities(updatedEntities);
+		updatedEntities = processGlobalIds(updatedEntities);
+		
+		return updatedEntities;
+	}
+	
+	/**
+	 * Removes already pending entities from the specified collection. This method
+	 * is used to prevent the update poller from sending notifications containing
+	 * entities from previously sent notifications.
+	 * @param entities The entities to filter.
+	 * @return A filtered list of entities.
+	 */
+	private Collection<Entity> removePendingEntities(Collection<Entity> entities) {
+		Collection<Entity> filtered = new ArrayList<Entity>();
+		
+		for (Entity entity : entities) {
+			boolean isPending = false;
+			
+			synchronized (mPendingEntities) {
+				for (Entity pendingEntity : mPendingEntities) {
+					if (entity.getClass().equals(pendingEntity.getClass()) &&
+							entity.getId() == pendingEntity.getId()) {
+						isPending = true;
+						break;
+					}
+				}
+			}
+			
+			if (!isPending)
+				filtered.add(entity);
+		}
+		
+		return filtered;
 	}
 	
 	/**

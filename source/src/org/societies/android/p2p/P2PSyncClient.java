@@ -118,12 +118,12 @@ class P2PSyncClient extends Thread implements UpdateListener {
 	 * @see org.societies.android.p2p.UpdatePoller.UpdateListener#onEntitiesAvailable(java.util.Collection)
 	 */
 	public void onEntitiesAvailable(Collection<Entity> entities) {
+		Log.i(TAG, "Updated Entities Available: " + entities.size());
+		
 		synchronized (mUpdateQueue) {
 			mUpdateQueue.add(entities);
 			mUpdateQueue.notify();
 		}
-		
-		mPoller.resetEntityDirtyFlag(entities);
 	}
 
 	/**
@@ -132,16 +132,21 @@ class P2PSyncClient extends Thread implements UpdateListener {
 	 * @throws InterruptedIOException It a timeout occurs while sending request.
 	 */
 	private void performHandshake() throws InterruptedIOException, IOException {
+		Log.i(TAG, "Performing handshake...");
+		
 		Request handshake = new Request(mUniqueId, RequestType.HANDSHAKE);
 		
 		mConnection.connect();
-		mConnection.send(handshake);
 		
-		Response response = mConnection.receiveResponse();
+		try {
+			mConnection.send(handshake);
+			
+			Response response = mConnection.receiveResponse();
+			insertEntities(response.getEntities());
+		} finally {
+			mConnection.close();
+		}
 		
-		mConnection.close();
-		
-		insertEntities(response.getEntities());
 	}
 
 	/**
@@ -165,13 +170,15 @@ class P2PSyncClient extends Thread implements UpdateListener {
 		if (entities.size() > 0) {
 			Log.i(TAG, "Sending entities: " + entities.size());
 			
-			mConnection.connect();
+			Log.i(TAG , "Connected to server: " + mConnection.connect());
 			
 			Request request = new Request(mUniqueId, RequestType.UPDATE);
 			request.setUpdatedEntities(entities);
 			
 			try {
 				mConnection.send(request);
+				
+				mPoller.resetEntityDirtyFlag(entities);
 			} finally {
 				mConnection.close();
 			}
@@ -201,12 +208,11 @@ class P2PSyncClient extends Thread implements UpdateListener {
 		
 		mPoller.stopPolling();
 		
-		if (awaitTermination && isAlive()) {
-			if (getState() == State.TIMED_WAITING)
-				interrupt();
-			
+		if (getState() == State.TIMED_WAITING)
+			interrupt();
+		
+		if (awaitTermination && isAlive())
 			join();
-		}
 	}
 	
 	/**
@@ -229,6 +235,7 @@ class P2PSyncClient extends Thread implements UpdateListener {
 			try {
 				mListener.initialize();
 				
+				int heartBeatCounter = 0;
 				while (!mStopping) {
 					P2PConnection connection = null;
 					try {
@@ -236,7 +243,13 @@ class P2PSyncClient extends Thread implements UpdateListener {
 						
 						enqueueResponse(connection.receiveResponse());
 					} catch (InterruptedIOException e) {
-						/* Ignore */
+						heartBeatCounter++;
+						
+						if (heartBeatCounter == 10) {
+							heartBeatCounter = 0;
+							
+							Log.i(TAG, "Alive");
+						}
 					} finally {
 						closeConnection(connection);
 					}

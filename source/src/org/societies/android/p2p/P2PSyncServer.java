@@ -76,6 +76,7 @@ class P2PSyncServer extends Thread implements UpdateListener {
 		try {
 			mListener.initialize();
 			
+			int heartBeatCounter = 0;
 			while (!mStopping) {
 				try {
 					P2PConnection connection = mListener.acceptConnection();
@@ -84,7 +85,15 @@ class P2PSyncServer extends Thread implements UpdateListener {
 						new ClientHandler(connection).start();
 					else
 						Log.e(TAG, "Accepted connection: null");
-				} catch (InterruptedIOException e) { /* Ignore */ }
+				} catch (InterruptedIOException e) {
+					heartBeatCounter++;
+					
+					if (heartBeatCounter == 10) {
+						heartBeatCounter = 0;
+						
+						Log.i(TAG, "Alive");
+					}
+				}
 			}
 		} catch (IOException e) {
 			Log.e(TAG, e.getMessage(), e);

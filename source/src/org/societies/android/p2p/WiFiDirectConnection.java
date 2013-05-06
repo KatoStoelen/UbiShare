@@ -42,8 +42,8 @@ class WiFiDirectConnection extends P2PConnection {
 	private boolean mConnectRequired = true;
 	
 	/**
-	 * Initializes a new WiFi Direct connection with an open connection
-	 * to a remote host.
+	 * Initializes a new WiFi Direct connection with an <b>established</b>
+	 * connection to a remote host.
 	 * @param socket The connected TCP socket.
 	 * @throws IOException If an error occurs while initializing.
 	 */
@@ -56,10 +56,11 @@ class WiFiDirectConnection extends P2PConnection {
 	}
 	
 	/**
-	 * Initializes an unestablished WiFi Direct connection. A call
+	 * Initializes an <b>unestablished</b> WiFi Direct connection. A call
 	 * to <code>connect()</code> is required before using this
 	 * connection.
 	 * @param remoteAddress The address of the remote host.
+	 * @see P2PConnection#connect()
 	 */
 	public WiFiDirectConnection(InetSocketAddress remoteAddress) {
 		super(ConnectionType.WIFI_DIRECT);
@@ -68,10 +69,11 @@ class WiFiDirectConnection extends P2PConnection {
 	}
 	
 	/**
-	 * Initializes an unestablished WiFi Direct connection. A call
+	 * Initializes an <b>unestablished</b> WiFi Direct connection. A call
 	 * to <code>connect()</code> is required before using this
 	 * connection.
 	 * @param in The serialized object.
+	 * @see P2PConnection#connect()
 	 */
 	private WiFiDirectConnection(Parcel in) {
 		super(ConnectionType.WIFI_DIRECT);
@@ -92,14 +94,18 @@ class WiFiDirectConnection extends P2PConnection {
 		setOutputStream(mSocket.getOutputStream());
 	}
 	
-	@Override
-	public boolean isConnected() {
-		return (mSocket != null && mSocket.isConnected());
+	/**
+	 * Checks whether or not the connection has been closed.
+	 * @return <code>true</code> if the connection has been closed,
+	 * otherwise <code>false</code>.
+	 */
+	private boolean isClosed() {
+		return (mSocket != null && !mSocket.isClosed());
 	}
 
 	@Override
 	public boolean connect() throws IOException, InterruptedIOException {
-		if (mConnectRequired && !isConnected()) {
+		if (mConnectRequired && isClosed()) {
 			Log.i(TAG, "Connecting to: " + mRemoteAddress);
 			
 			Socket socket = new Socket();
@@ -107,7 +113,7 @@ class WiFiDirectConnection extends P2PConnection {
 			initialize(socket);
 		}
 		
-		return isConnected();
+		return isClosed();
 	}
 	
 	@Override
@@ -122,6 +128,7 @@ class WiFiDirectConnection extends P2PConnection {
 			if (mSocket != null)
 				mSocket.close();
 		} catch (IOException e) { lastException = e; }
+		mSocket = null;
 		
 		if (lastException != null)
 			throw lastException;
@@ -133,15 +140,13 @@ class WiFiDirectConnection extends P2PConnection {
 	 * if not connected.
 	 */
 	public String getRemoteIp() {
-		if (isConnected()) {
+		if (isClosed()) {
 			try {
 				String socketAddress =
 						mSocket.getRemoteSocketAddress()
 						.toString().replace("/", new String());
 				
-				Log.i(TAG, "SocketAddress: " + socketAddress);
-				
-				URI address = new URI("my://" + socketAddress);
+				URI address = new URI("url://" + socketAddress);
 				
 				return address.getHost();
 			} catch (URISyntaxException e) {
@@ -149,8 +154,6 @@ class WiFiDirectConnection extends P2PConnection {
 				return null;
 			}
 		} else {
-			Log.i(TAG, "Not connected");
-			
 			return null;
 		}
 	}
@@ -171,7 +174,8 @@ class WiFiDirectConnection extends P2PConnection {
 	}
 	
 	/**
-	 * This field is required by Parcelable.
+	 * Required by Parcelable.
+	 * @see Parcelable
 	 */
 	public static final Parcelable.Creator<WiFiDirectConnection> CREATOR =
 			new Parcelable.Creator<WiFiDirectConnection>() {
