@@ -17,9 +17,8 @@ package org.societies.android.platform.entity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.societies.android.api.cis.SocialContract;
 
 import static org.societies.android.api.cis.SocialContract.SyncColumns.*;
@@ -49,10 +48,19 @@ public abstract class Entity {
 	/** The default local ID of an entity. */
 	public static final long ENTITY_DEFAULT_ID = -1;
 	
+	private final UUID mInstanceId;
+	
 	private String accountType = SELECTION_ACCOUNT_TYPE;
 	private String accountName = SELECTION_ACCOUNT_NAME;
 	private int dirty;
 	@Expose private int deleted;
+	
+	/**
+	 * Initializes a new entity.
+	 */
+	protected Entity() {
+		mInstanceId = UUID.randomUUID();
+	}
 	
 	/**
 	 * Removes the entity with the specified global ID from the database.
@@ -417,10 +425,14 @@ public abstract class Entity {
 	 * @throws IllegalStateException If the entity is already in the database.
 	 */
 	public Uri insert(ContentResolver resolver) throws IllegalStateException {
-		if (getId() == ENTITY_DEFAULT_ID)
-			return resolver.insert(getContentUri(), getEntityValues());
-		else
+		if (getId() == ENTITY_DEFAULT_ID) {
+			Uri uri = resolver.insert(getContentUri(), getEntityValues());
+			setId(Integer.parseInt(uri.getLastPathSegment()));
+			
+			return uri;
+		} else {
 			throw new IllegalStateException("The entity is already in the database.");
+		}
 	}
 	
 	/**
@@ -601,19 +613,13 @@ public abstract class Entity {
 		if (!(o instanceof Entity))
 			return false;
 		
-		Entity rhs = (Entity) o;
-		return new EqualsBuilder()
-			.append(this.getClass().getCanonicalName(),
-					rhs.getClass().getCanonicalName())
-			.append(this.getId(), rhs.getId())
-			.isEquals();
+		Entity other = (Entity) o;
+		
+		return mInstanceId.compareTo(other.mInstanceId) == 0;
 	}
 	
 	@Override
 	public int hashCode() {
-		return new HashCodeBuilder()
-			.append(getClass().getCanonicalName())
-			.append(getId())
-			.toHashCode();
+		return mInstanceId.toString().hashCode();
 	}
 }
