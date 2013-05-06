@@ -17,7 +17,6 @@ package org.societies.android.platform.entity;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.societies.android.api.cis.SocialContract;
 
@@ -48,19 +47,10 @@ public abstract class Entity {
 	/** The default local ID of an entity. */
 	public static final long ENTITY_DEFAULT_ID = -1;
 	
-	private final UUID mInstanceId;
-	
 	private String accountType = SELECTION_ACCOUNT_TYPE;
 	private String accountName = SELECTION_ACCOUNT_NAME;
 	private int dirty;
 	@Expose private int deleted;
-	
-	/**
-	 * Initializes a new entity.
-	 */
-	protected Entity() {
-		mInstanceId = UUID.randomUUID();
-	}
 	
 	/**
 	 * Removes the entity with the specified global ID from the database.
@@ -602,24 +592,5 @@ public abstract class Entity {
 	 */
 	public void setDeletedFlag(int deleted) {
 		this.deleted = deleted;
-	}
-	
-	@Override
-	public boolean equals(Object o) {
-		if (o == null)
-			return false;
-		if (o == this)
-			return true;
-		if (!(o instanceof Entity))
-			return false;
-		
-		Entity other = (Entity) o;
-		
-		return mInstanceId.compareTo(other.mInstanceId) == 0;
-	}
-	
-	@Override
-	public int hashCode() {
-		return mInstanceId.toString().hashCode();
 	}
 }
