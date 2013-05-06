@@ -18,6 +18,8 @@ package org.societies.android.platform.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.societies.android.api.cis.SocialContract;
 
 import static org.societies.android.api.cis.SocialContract.SyncColumns.*;
@@ -588,5 +590,30 @@ public abstract class Entity {
 	 */
 	public void setDeletedFlag(int deleted) {
 		this.deleted = deleted;
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o == null)
+			return false;
+		if (o == this)
+			return true;
+		if (!(o instanceof Entity))
+			return false;
+		
+		Entity rhs = (Entity) o;
+		return new EqualsBuilder()
+			.append(this.getClass().getCanonicalName(),
+					rhs.getClass().getCanonicalName())
+			.append(this.getId(), rhs.getId())
+			.isEquals();
+	}
+	
+	@Override
+	public int hashCode() {
+		return new HashCodeBuilder()
+			.append(getClass().getCanonicalName())
+			.append(getId())
+			.toHashCode();
 	}
 }
