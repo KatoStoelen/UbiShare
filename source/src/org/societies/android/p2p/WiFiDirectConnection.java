@@ -95,17 +95,17 @@ class WiFiDirectConnection extends P2PConnection {
 	}
 	
 	/**
-	 * Checks whether or not the connection has been closed.
-	 * @return <code>true</code> if the connection has been closed,
+	 * Checks whether or not a connection has been successfully made.
+	 * @return <code>true</code> if the a connection has been made,
 	 * otherwise <code>false</code>.
 	 */
-	private boolean isClosed() {
-		return (mSocket != null && !mSocket.isClosed());
+	private boolean isConnected() {
+		return (mSocket != null && mSocket.isConnected());
 	}
 
 	@Override
 	public boolean connect() throws IOException, InterruptedIOException {
-		if (mConnectRequired && isClosed()) {
+		if (mConnectRequired && !isConnected()) {
 			Log.i(TAG, "Connecting to: " + mRemoteAddress);
 			
 			Socket socket = new Socket();
@@ -113,7 +113,7 @@ class WiFiDirectConnection extends P2PConnection {
 			initialize(socket);
 		}
 		
-		return isClosed();
+		return isConnected();
 	}
 	
 	@Override
@@ -140,7 +140,7 @@ class WiFiDirectConnection extends P2PConnection {
 	 * if not connected.
 	 */
 	public String getRemoteIp() {
-		if (isClosed()) {
+		if (isConnected()) {
 			try {
 				String socketAddress =
 						mSocket.getRemoteSocketAddress()
