@@ -37,7 +37,7 @@ public class P2PSyncServerService extends Service implements ISyncService {
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		if (!IS_RUNNING) {
+		if (!IS_RUNNING && intent != null) {
 			P2PConnectionListener listener =
 					(P2PConnectionListener) intent.getParcelableExtra(
 							EXTRA_CONNECTION_LISTENER);
