@@ -104,7 +104,7 @@ class UpdatePoller extends Thread {
 		
 		for (Entity entity : entities) {
 			entity.setDirtyFlag(0);
-			entity.insert(mContext.getContentResolver());
+			entity.update(mContext.getContentResolver());
 		}
 	}
 
