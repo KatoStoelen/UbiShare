@@ -81,11 +81,9 @@ class P2PSyncServer extends Thread implements UpdateListener {
 					
 					if (connection != null)
 						new ClientHandler(connection).start();
-					else
-						Log.e(TAG, "Accepted connection: null");
 				} catch (InterruptedIOException e) { /* Ignore */ }
 			}
-		} catch (IOException e) {
+		} catch (Exception e) {
 			Log.e(TAG, e.getMessage(), e);
 		} finally {
 			try {
@@ -276,8 +274,8 @@ class P2PSyncServer extends Thread implements UpdateListener {
 			for (Entity entity : update) {
 				entity.fetchLocalIds(resolver);
 				
-				if (entity.getDeletedFlag() != 0
-						&& entity.getId() != Entity.ENTITY_DEFAULT_ID)
+				if (entity.getDeletedFlag() != 0 &&
+						entity.getId() != Entity.ENTITY_DEFAULT_ID)
 					entity.delete(resolver);
 				else if (entity.getDeletedFlag() != 0)
 					Log.e(TAG, "Could not delete entity: id = -1");
@@ -352,6 +350,8 @@ class P2PSyncServer extends Thread implements UpdateListener {
 				mPeer.setActive(false);
 			} catch (InterruptedException e) {
 				Log.e(TAG, "Interrupted while waiting for lock");
+			} catch (Exception e) {
+				Log.e(TAG, e.getMessage(), e);
 			} finally {
 				if (connection != null) {
 					try {

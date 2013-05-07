@@ -99,11 +99,11 @@ class P2PSyncClient extends Thread implements UpdateListener {
 				
 				sendEntities(updatedEntities);
 			}
-		} catch (IOException e) {
-			Log.e(TAG, e.getMessage(), e);
 		} catch (InterruptedException e) {
 			if (!mStopping)
 				Log.e(TAG, "Interrupted while waiting for queue");
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage(), e);
 		} finally {
 			mStopping = true;
 		}
@@ -247,7 +247,7 @@ class P2PSyncClient extends Thread implements UpdateListener {
 						closeConnection(connection);
 					}
 				}
-			} catch (IOException e) {
+			} catch (Exception e) {
 				Log.e(TAG, e.getMessage(), e);
 			} finally {
 				closeListener();
@@ -319,7 +319,9 @@ class P2PSyncClient extends Thread implements UpdateListener {
 					}
 				} catch (InterruptedException e) {
 					if (!mStopping)
-						Log.i(TAG, "Interrupted while waiting for queue");
+						Log.e(TAG, "Interrupted while waiting for queue");
+				} catch (Exception e) {
+					Log.e(TAG, e.getMessage(), e);
 				}
 				
 				Log.i(TAG, "ResponseHandler terminated");
