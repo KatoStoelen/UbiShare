@@ -57,7 +57,7 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 	private final WifiP2pManager mWifiP2pManager;
 	private final Channel mChannel;
 	
-	private boolean mConnected = false;
+	private boolean mInGroup = false;
 
 	/**
 	 * Initializes a new WiFi Direct sync manager.
@@ -182,7 +182,7 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 	
 	@Override
 	public boolean isConnected() {
-		return mConnected;
+		return mInGroup;
 	}
 	
 	/**
@@ -238,10 +238,10 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 	public void onConnectionInfoAvailable(WifiP2pInfo info) {
 		Log.i(TAG, "Group created: " + info.groupFormed);
 		
-		mConnected = info.groupFormed;
+		mInGroup = info.groupFormed;
 		
-		if (isSynchronizationActive()) {
-			Log.i(TAG, "Synchronization is already running");
+		if (!mInGroup && isSynchronizationActive()) {
+			stopSync();
 		} else {
 			if (info.groupFormed && info.isGroupOwner) {
 				startSyncServer();
