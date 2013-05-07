@@ -16,7 +16,8 @@
 package org.societies.android.p2p;
 
 /**
- * An enum of supported connection types.
+ * Connection types are used to determine which interface to
+ * use when synchronizing.
  * 
  * @author Kato
  */

@@ -20,7 +20,7 @@ package org.societies.android.p2p;
  * 
  * @author Kato
  */
-public interface ISyncService {
+interface ISyncService {
 
 	/**
 	 * Stops the sync service.

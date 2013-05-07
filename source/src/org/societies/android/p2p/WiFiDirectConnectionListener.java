@@ -28,7 +28,7 @@ import android.os.Parcelable;
  * 
  * @author Kato
  */
-public class WiFiDirectConnectionListener extends P2PConnectionListener {
+class WiFiDirectConnectionListener extends P2PConnectionListener {
 	
 	private int mPort;
 	transient private ServerSocket mListener;

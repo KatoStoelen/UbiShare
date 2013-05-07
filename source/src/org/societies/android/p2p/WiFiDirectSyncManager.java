@@ -116,7 +116,7 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 
 	@Override
 	public void discoverPeers() {
-		throwIfNotInitialized();
+		throwIfIllegalState();
 		
 		Log.i(TAG, "Discovering peers...");
 		
@@ -136,7 +136,7 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 
 	@Override
 	public void connectTo(P2PDevice device) {
-		throwIfNotInitialized();
+		throwIfIllegalState();
 		
 		Log.i(TAG, "Connecting to device " + device.getName() +
 				" (" + device.getAddress() + ")...");
@@ -161,7 +161,7 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 	
 	@Override
 	public void disconnect() {
-		throwIfNotInitialized();
+		throwIfIllegalState();
 		
 		Log.i(TAG, "Disconnecting...");
 		

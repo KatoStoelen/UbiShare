@@ -15,6 +15,8 @@
  */
 package org.societies.android.p2p;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import android.content.BroadcastReceiver;
@@ -28,20 +30,40 @@ import android.os.IBinder;
 import android.util.Log;
 
 /**
- * The P2PSyncManager handles the creation of WiFi Direct groups
- * and pairing of devices.
+ * The P2P sync manager is the glue holding all the pieces of the peer-to-peer
+ * synchronization together. All actions related to peer-to-peer synchronization
+ * is performed through this class.
+ * <br><br>
+ * The constructor is <code>protected</code>, which enforces the use of
+ * <code>P2PSyncManager.getSyncManager(Context, IP2PChangeListener, ConnecionType)</code>.
+ * <br><br>
+ * The P2P sync manager support multiple instances, as long as the connection type is
+ * different. Multiple instances of <code>P2PSyncManager</code> with the same
+ * connection type is not allowed. Two instances of <code>P2PSyncManager</code> can
+ * be used to allow synchronization using both Bluetooth and WiFi Direct etc.
  * 
+ * @see P2PSyncManager#getSyncManager(Context, IP2PChangeListener, ConnectionType)
  * @author Kato
  */
 public abstract class P2PSyncManager {
 	
 	public static final String TAG = "P2PSyncManager";
+	
+	/**
+	 * Map containing the sync manager instances. This is used to prevent
+	 * multiple instances of the same connection type. Having multiple
+	 * sync managers with different connection type is allowed.
+	 */
+	private static final Map<ConnectionType, P2PSyncManager> INSTANCES =
+			new HashMap<ConnectionType, P2PSyncManager>();
 
 	/**
-	 * An enum of P2P interface statuses.
+	 * P2P interface statuses are used to reflect the state of a
+	 * peer-to-peer interface, whether it is on or off, or even if
+	 * it is not supported.
 	 */
 	public enum P2PInterfaceStatus {
-		/** Indicates that the P2P is not supported. */
+		/** Indicates that P2P is not supported on this device. */
 		NOT_SUPPORTED,
 		
 		/** Indicates that the P2P interface is OFF. */
@@ -52,7 +74,8 @@ public abstract class P2PSyncManager {
 	}
 	
 	/**
-	 * An enum of synchronization roles.
+	 * Synchronization roles are used to indicate whether the current
+	 * device is acting as a server or a client.
 	 */
 	public enum SyncRole {
 		/** Indicates that the current device is the server. */
@@ -68,9 +91,10 @@ public abstract class P2PSyncManager {
 	private IntentFilter mIntentFilter;
 	private BroadcastReceiver mBroadcastReceiver;
 	private ServiceConnection mServiceConnection;
+	private boolean mBroadcastReceiverRegistered = false;
 	
 	protected final IP2PChangeListener mChangeListener;
-	protected Context mContext;
+	protected final Context mContext;
 	protected boolean mInitialized = false;
 	
 	/**
@@ -87,15 +111,21 @@ public abstract class P2PSyncManager {
 			Context context,
 			ConnectionType connectionType,
 			IP2PChangeListener changeListener) {
+		if (INSTANCES.containsKey(connectionType))
+			throw new IllegalArgumentException("Sync Manager already exists: " +
+					connectionType);
+		
 		mContext = context;
 		mConnectionType = connectionType;
 		mChangeListener = changeListener;
+		
+		INSTANCES.put(connectionType, this);
 	}
 	
 	/**
 	 * Initializes the sync manager.
 	 */
-	protected void initialize() {
+	private void initialize() {
 		mIntentFilter = getIntentFilter();
 		mBroadcastReceiver = getBroadcastReceiver();
 		mServiceConnection = getServiceConnection();
@@ -105,56 +135,78 @@ public abstract class P2PSyncManager {
 	
 	/**
 	 * Throws an <code>IllegalStateException</code> it the sync manager is
-	 * not initialized.
-	 * @throws IllegalStateException If the sync manager is not initialized.
+	 * in an illegal state.
+	 * @throws IllegalStateException If the sync manager is in an illegal state.
 	 */
-	protected void throwIfNotInitialized() throws IllegalStateException {
+	protected void throwIfIllegalState() throws IllegalStateException {
 		if (!mInitialized)
 			throw new IllegalStateException("Not initialized: Call initialize()");
+		if (!mBroadcastReceiverRegistered)
+			throw new IllegalStateException("Broadcast receiver not registered");
 	}
 	
 	/**
-	 * Gets the broadcast receiver of the specified connection type.
+	 * Gets the broadcast receiver used to receive notifications of interface
+	 * and connectivity changes.
 	 * @return A broadcast receiver.
 	 */
 	protected abstract BroadcastReceiver getBroadcastReceiver();
 
 	/**
-	 * Gets the intent filter of the specified connection type.
+	 * Gets the intent filter used to determine which broadcasts to receive.
 	 * @return An intent filter.
 	 */
 	protected abstract IntentFilter getIntentFilter();
 	
 	/**
-	 * Registers a broadcast receiver to be called with the connection specific
-	 * broadcast intents.
+	 * The broadcast receiver is used to receive notifications of interface and
+	 * connectivity changes. Registering the broadcast receiver is necessary in
+	 * order for the P2P sync manager to work. This method should be called
+	 * within the activity's <code>onResume()</code> method.
 	 */
 	public void registerBroadcastReceiver() {
 		mContext.registerReceiver(mBroadcastReceiver, mIntentFilter);
-		Log.i(TAG, "Broadcast Receiver Registered");
+
+		mBroadcastReceiverRegistered = true;
 	}
 	
 	/**
-	 * Unregisters the broadcast receiver.
+	 * Unregistering the broadcast receiver will cut down on unnecessary system
+	 * overhead and Android does not allow a previously registered broadcast
+	 * receiver to continue after the activity has been suspended. An exception
+	 * is thrown if the broadcast receiver is not unregistered when the activity
+	 * goes into a suspended state. This method should be called within the
+	 * activity's <code>onPause()</code> method.
 	 */
 	public void unregisterBroadcastReceiver() {
 		mContext.unregisterReceiver(mBroadcastReceiver);
-		Log.i(TAG, "Broadcast Receiver Unregistered");
+		
+		mBroadcastReceiverRegistered = false;
 	}
 	
 	/**
-	 * Starts the discovering of peers. This is an asynchronous call.
+	 * Starts the discovering of peers. This is an asynchronous call. The
+	 * P2P change listener will receive a notification when peers are available.
+	 * @see IP2PChangeListener#onPeersAvailable(java.util.List, boolean, Object)
+	 * @see IP2PChangeListener#onDiscoverPeersFailure(String, Object)
 	 */
 	public abstract void discoverPeers();
 	
 	/**
 	 * Starts the connection to the specified device. This is an asynchronous call.
+	 * The P2P change listener will receive a notification when the connection has
+	 * been made.
 	 * @param device The device to connect to.
+	 * @see IP2PChangeListener#onConnectionSuccess(SyncRole, Object)
+	 * @see IP2PChangeListener#onConnectionFailure(String, Object)
 	 */
 	public abstract void connectTo(P2PDevice device);
 	
 	/**
-	 * Disconnects from the P2P group.
+	 * Disconnects from the P2P group. This is an asynchronous call. The P2P change
+	 * listener will receive a notification when disconnected.
+	 * @see IP2PChangeListener#onDisconnectSuccess(Object)
+	 * @see IP2PChangeListener#onDisconnectFailure(String, Object)
 	 */
 	public abstract void disconnect();
 	
@@ -174,7 +226,8 @@ public abstract class P2PSyncManager {
 	protected abstract P2PConnectionListener getServerConnectionListener();
 	
 	/**
-	 * Starts the sync server.
+	 * Starts the sync server service. If the synchronization is already running,
+	 * it will be stopped and restarted.
 	 */
 	protected void startSyncServer() {
 		Log.i(TAG, "Starting Sync Server...");
@@ -198,7 +251,8 @@ public abstract class P2PSyncManager {
 	}
 	
 	/**
-	 * Gets a unique ID that can be used to identify a client.
+	 * Gets a unique ID that can be used to identify a client. The unique
+	 * ID is stored in shared preferences for reuse.
 	 * @return A string containing a unique ID.
 	 */
 	protected String getUniqueId() {
@@ -251,8 +305,8 @@ public abstract class P2PSyncManager {
 	
 	/**
 	 * Stops the synchronization. This is an asynchronous call.
-	 * <code>IP2PChangeListener.onSyncStopped()</code> will be called when
-	 * the synchronization has stopped.
+	 * The P2P change listener will receive a notification when the
+	 * synchronization has stopped.
 	 * @see IP2PChangeListener#onSyncStopped(Object)
 	 */
 	public void stopSync() {
@@ -279,8 +333,8 @@ public abstract class P2PSyncManager {
 	}
 	
 	/**
-	 * Gets the service connection.
-	 * @return The service connection.
+	 * Gets the service connection used to stop synchronization services.
+	 * @return A <code>ServiceConnection</code> instance.
 	 */
 	private ServiceConnection getServiceConnection() {
 		return new ServiceConnection() {
@@ -303,13 +357,34 @@ public abstract class P2PSyncManager {
 	}
 	
 	/**
-	 * Gets the sync manager with the specified connection type.
+	 * Gets the sync manager with the specified connection type. If a sync
+	 * manager with the specified connection type has already been created,
+	 * this instance will be returned.
+	 * @param context The context to use.
+	 * @param listener The listener to notify of P2P changes.
+	 * @param connectionType The connection type to use.
+	 * @return An initialized <code>P2PSyncManager</code> instance.
+	 * @see ConnectionType
+	 */
+	public static P2PSyncManager getSyncManager(
+			Context context,
+			IP2PChangeListener listener,
+			ConnectionType connectionType) {
+		if (INSTANCES.containsKey(connectionType))
+			return INSTANCES.get(connectionType);
+		else
+			return getInitializedSyncManager(
+					context, listener, connectionType);
+	}
+	
+	/**
+	 * Gets a new and initialized sync manager.
 	 * @param context The context to use.
 	 * @param listener The listener to notify of P2P changes.
 	 * @param connectionType The connection type to use.
 	 * @return An initialized <code>P2PSyncManager</code> instance.
 	 */
-	public static P2PSyncManager getSyncManager(
+	private static P2PSyncManager getInitializedSyncManager(
 			Context context,
 			IP2PChangeListener listener,
 			ConnectionType connectionType) {
@@ -320,8 +395,8 @@ public abstract class P2PSyncManager {
 		else if (connectionType == ConnectionType.BLUETOOTH)
 			syncManager = new BluetoothSyncManager(context, listener);
 		else
-			throw new IllegalArgumentException("Unknown connection type: "
-					+ connectionType);
+			throw new IllegalArgumentException(
+					"Unknown connection type: " + connectionType);
 		
 		syncManager.initialize();
 		
