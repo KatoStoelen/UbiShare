@@ -99,7 +99,7 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 
 	@Override
 	protected BroadcastReceiver getBroadcastReceiver() {
-		return new WiFiDirectBroadcastReceiver(this, mWifiP2pManager, mChannel);
+		return new WiFiDirectBroadcastReceiver(this);
 	}
 
 	@Override
@@ -183,6 +183,22 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 	@Override
 	public boolean isConnected() {
 		return mConnected;
+	}
+	
+	/**
+	 * Gets the WiFi P2P channel.
+	 * @return The WiFi P2P channel.
+	 */
+	public Channel getChannel() {
+		return mChannel;
+	}
+	
+	/**
+	 * Gets the WiFi P2P manager.
+	 * @return The WiFi P2P manager.
+	 */
+	public WifiP2pManager getWifiP2pManager() {
+		return mWifiP2pManager;
 	}
 	
 	/**

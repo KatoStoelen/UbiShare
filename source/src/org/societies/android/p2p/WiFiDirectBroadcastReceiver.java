@@ -47,16 +47,12 @@ class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
 	/**
 	 * Initializes a new WiFi Direct broadcast receiver.
 	 * @param syncManager The WiFi Direct sync manager.
-	 * @param wifiP2pManager The WifiP2pManager instance.
-	 * @param channel The channel instance.
 	 */
 	public WiFiDirectBroadcastReceiver(
-			WiFiDirectSyncManager syncManager,
-			WifiP2pManager wifiP2pManager,
-			Channel channel) {
+			WiFiDirectSyncManager syncManager) {
 		mSyncManager = syncManager;
-		mWifiP2pManager = wifiP2pManager;
-		mChannel = channel;
+		mWifiP2pManager = syncManager.getWifiP2pManager();
+		mChannel = syncManager.getChannel();
 	}
 
 	@Override
