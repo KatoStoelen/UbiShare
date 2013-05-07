@@ -23,9 +23,17 @@ package org.societies.android.p2p;
 interface ISyncService {
 
 	/**
-	 * Stops the sync service.
+	 * Stops the sync service of the specified connection type.
+	 * @param connectionType The connection type of the service to stop.
 	 * @param awaitTermination Whether or not to block until the service
 	 * has terminated.
 	 */
-	void stopSync(boolean awaitTermination);
+	void stopSync(ConnectionType connectionType, boolean awaitTermination);
+	
+	/**
+	 * Stops all the running synchronization services.
+	 * @param awaitTermination Whether or not to block until all the services
+	 * have terminated.
+	 */
+	void stopAllSync(boolean awaitTermination);
 }

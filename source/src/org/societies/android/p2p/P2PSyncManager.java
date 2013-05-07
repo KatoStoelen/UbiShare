@@ -343,7 +343,7 @@ public abstract class P2PSyncManager {
 				LocalServiceBinder localBinder = (LocalServiceBinder) service;
 				
 				ISyncService syncService = localBinder.getService();
-				syncService.stopSync(true);
+				syncService.stopSync(mConnectionType, true);
 				
 				mContext.unbindService(this);
 				

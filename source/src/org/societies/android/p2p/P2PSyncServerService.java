@@ -15,6 +15,9 @@
  */
 package org.societies.android.p2p;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
@@ -33,18 +36,20 @@ public class P2PSyncServerService extends Service implements ISyncService {
 	public static boolean IS_RUNNING = false;
 	
 	private final IBinder mBinder = new LocalServiceBinder(this);
-	private P2PSyncServer mSyncServer;
+	private Map<ConnectionType, P2PSyncServer> mSyncServers =
+			new HashMap<ConnectionType, P2PSyncServer>();
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		if (!IS_RUNNING && intent != null) {
-			P2PConnectionListener listener =
-					(P2PConnectionListener) intent.getParcelableExtra(
-							EXTRA_CONNECTION_LISTENER);
+			P2PConnectionListener listener = (P2PConnectionListener)
+					intent.getParcelableExtra(EXTRA_CONNECTION_LISTENER);
 			
-			if (mSyncServer == null) {
-				mSyncServer = new P2PSyncServer(this, listener);
-				mSyncServer.start();
+			if (!mSyncServers.containsKey(listener.getConnectionType())) {
+				P2PSyncServer syncServer = new P2PSyncServer(this, listener);
+				syncServer.start();
+				
+				mSyncServers.put(listener.getConnectionType(), syncServer);
 			}
 			
 			IS_RUNNING = true;
@@ -62,32 +67,54 @@ public class P2PSyncServerService extends Service implements ISyncService {
 	public void onDestroy() {
 		super.onDestroy();
 		
-		stopSyncServer(false);
+		stopAllSyncServers(false);
 		
 		IS_RUNNING = false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.societies.android.p2p.ISyncService#stopSync(boolean)
-	 */
-	public void stopSync(boolean awaitTermination) {
-		stopSyncServer(awaitTermination);
-		
-		stopSelf();
-	}
-
 	/**
-	 * Stops the sync server.
+	 * Stops the sync server with the specified connection type.
+	 * @param connectionType The connection type of the server to stop.
 	 * @param awaitTermination Whether or not to block until the sync
 	 * server has terminated.
 	 */
-	private void stopSyncServer(boolean awaitTermination) {
+	private void stopSyncServer(
+			ConnectionType connectionType, boolean awaitTermination) {
 		try {
-			if (mSyncServer != null)
-				mSyncServer.stopServer(awaitTermination);
+			if (mSyncServers.containsKey(connectionType))
+				mSyncServers.get(connectionType)
+					.stopServer(awaitTermination);
 		} catch (InterruptedException e) { /* Ignore */ }
 		
-		mSyncServer = null;
+		mSyncServers.remove(connectionType);
+	}
+	
+	/**
+	 * Stops all the currently running sync servers.
+	 * @param awaitTermination Whether or not to block until the sync
+	 * servers have terminated.
+	 */
+	private void stopAllSyncServers(boolean awaitTermination) {
+		for (ConnectionType connectionType : mSyncServers.keySet())
+			stopSyncServer(connectionType, awaitTermination);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.societies.android.p2p.ISyncService#stopSync(org.societies.android.p2p.ConnectionType, boolean)
+	 */
+	public void stopSync(ConnectionType connectionType, boolean awaitTermination) {
+		stopSyncServer(connectionType, awaitTermination);
+		
+		if (mSyncServers.isEmpty())
+			stopSelf();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.societies.android.p2p.ISyncService#stopAllSync(boolean)
+	 */
+	public void stopAllSync(boolean awaitTermination) {
+		stopAllSyncServers(awaitTermination);
+		
+		stopSelf();
 	}
 }
