@@ -235,7 +235,6 @@ class P2PSyncClient extends Thread implements UpdateListener {
 			try {
 				mListener.initialize();
 				
-				int heartBeatCounter = 0;
 				while (!mStopping) {
 					P2PConnection connection = null;
 					try {
@@ -243,13 +242,7 @@ class P2PSyncClient extends Thread implements UpdateListener {
 						
 						enqueueResponse(connection.receiveResponse());
 					} catch (InterruptedIOException e) {
-						heartBeatCounter++;
-						
-						if (heartBeatCounter == 10) {
-							heartBeatCounter = 0;
-							
-							Log.i(TAG, "Alive");
-						}
+						/* Ignore */
 					} finally {
 						closeConnection(connection);
 					}
