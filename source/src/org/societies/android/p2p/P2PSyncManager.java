@@ -15,8 +15,6 @@
  */
 package org.societies.android.p2p;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import android.content.BroadcastReceiver;
@@ -272,9 +270,9 @@ public abstract class P2PSyncManager {
 		
 		Intent intent = null;
 		
-		if (P2PSyncClientService.IS_RUNNING)
+		if (P2PSyncClientService.isSyncClientRunning(mConnectionType))
 			intent = new Intent(mContext, P2PSyncClientService.class);
-		else if (P2PSyncServerService.IS_RUNNING)
+		else if (P2PSyncServerService.isSyncServerRunning(mConnectionType))
 			intent = new Intent(mContext, P2PSyncServerService.class);
 		
 		if (intent != null) {
@@ -315,7 +313,8 @@ public abstract class P2PSyncManager {
 	 * otherwise <code>false</code>.
 	 */
 	public boolean isSynchronizationActive() {
-		return P2PSyncClientService.IS_RUNNING || P2PSyncServerService.IS_RUNNING;
+		return P2PSyncClientService.isSyncClientRunning(mConnectionType) ||
+				P2PSyncServerService.isSyncServerRunning(mConnectionType);
 	}
 	
 	/**

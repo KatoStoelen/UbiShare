@@ -38,8 +38,8 @@ public class P2PSyncClientService extends Service implements ISyncService {
 	/** Name of the unique ID extra. */
 	public static final String EXTRA_UNIQUE_ID = "extra_unique_id";
 	
-	/** Whether or not the service is running. */
-	public static boolean IS_RUNNING = false;
+	private static final Map<ConnectionType, String> mSyncClientRunning =
+			new HashMap<ConnectionType, String>();
 	
 	private final IBinder mBinder = new LocalServiceBinder(this);
 	private Map<ConnectionType, P2PSyncClient> mSyncClients =
@@ -47,7 +47,7 @@ public class P2PSyncClientService extends Service implements ISyncService {
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		if (!IS_RUNNING && intent != null) {
+		if (intent != null) {
 			P2PConnection connection = (P2PConnection)
 					intent.getParcelableExtra(EXTRA_CONNECTION);
 			P2PConnectionListener listener = (P2PConnectionListener)
@@ -60,9 +60,8 @@ public class P2PSyncClientService extends Service implements ISyncService {
 				syncClient.start();
 				
 				mSyncClients.put(connection.getConnectionType(), syncClient);
+				mSyncClientRunning.put(connection.getConnectionType(), "true");
 			}
-			
-			IS_RUNNING = true;
 		}
 		
 		return START_STICKY;
@@ -78,8 +77,6 @@ public class P2PSyncClientService extends Service implements ISyncService {
 		super.onDestroy();
 		
 		stopAllSyncClients(false);
-		
-		IS_RUNNING = false;
 	}
 	
 	/**
@@ -97,6 +94,7 @@ public class P2PSyncClientService extends Service implements ISyncService {
 		} catch (InterruptedException e) { /* Ignore */ }
 		
 		mSyncClients.remove(connectionType);
+		mSyncClientRunning.remove(connectionType);
 	}
 	
 	/**
@@ -126,5 +124,16 @@ public class P2PSyncClientService extends Service implements ISyncService {
 		stopAllSyncClients(awaitTermination);
 		
 		stopSelf();
+	}
+	
+	/**
+	 * Gets whether or not the sync client with the specified connection type
+	 * is running.
+	 * @param connectionType The connection type of the sync client.
+	 * @return <code>true</code> if the sync client is running, otherwise
+	 * <code>false</code>.
+	 */
+	public static boolean isSyncClientRunning(ConnectionType connectionType) {
+		return mSyncClientRunning.containsKey(connectionType);
 	}
 }

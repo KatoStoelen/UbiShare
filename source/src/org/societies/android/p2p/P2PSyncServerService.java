@@ -32,8 +32,8 @@ public class P2PSyncServerService extends Service implements ISyncService {
 	/** The connection listener. */
 	public static final String EXTRA_CONNECTION_LISTENER = "connection_listener";
 	
-	/** Whether or not the service is running. */
-	public static boolean IS_RUNNING = false;
+	public static final Map<ConnectionType, String> mSyncServerRunning =
+			new HashMap<ConnectionType, String>();
 	
 	private final IBinder mBinder = new LocalServiceBinder(this);
 	private Map<ConnectionType, P2PSyncServer> mSyncServers =
@@ -41,7 +41,7 @@ public class P2PSyncServerService extends Service implements ISyncService {
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		if (!IS_RUNNING && intent != null) {
+		if (intent != null) {
 			P2PConnectionListener listener = (P2PConnectionListener)
 					intent.getParcelableExtra(EXTRA_CONNECTION_LISTENER);
 			
@@ -50,9 +50,8 @@ public class P2PSyncServerService extends Service implements ISyncService {
 				syncServer.start();
 				
 				mSyncServers.put(listener.getConnectionType(), syncServer);
+				mSyncServerRunning.put(listener.getConnectionType(), "true");
 			}
-			
-			IS_RUNNING = true;
 		}
 		
 		return START_STICKY;
@@ -68,8 +67,6 @@ public class P2PSyncServerService extends Service implements ISyncService {
 		super.onDestroy();
 		
 		stopAllSyncServers(false);
-		
-		IS_RUNNING = false;
 	}
 
 	/**
@@ -87,6 +84,7 @@ public class P2PSyncServerService extends Service implements ISyncService {
 		} catch (InterruptedException e) { /* Ignore */ }
 		
 		mSyncServers.remove(connectionType);
+		mSyncServerRunning.remove(connectionType);
 	}
 	
 	/**
@@ -116,5 +114,16 @@ public class P2PSyncServerService extends Service implements ISyncService {
 		stopAllSyncServers(awaitTermination);
 		
 		stopSelf();
+	}
+	
+	/**
+	 * Gets whether or not the sync server with the specified connection type is
+	 * running.
+	 * @param connectionType The connection type of the sync server.
+	 * @return <code>true</code> if the sync server is running, otherwise
+	 * <code>false</code>.
+	 */
+	public static boolean isSyncServerRunning(ConnectionType connectionType) {
+		return mSyncServerRunning.containsKey(connectionType);
 	}
 }

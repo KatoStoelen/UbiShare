@@ -242,12 +242,12 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 		
 		if (!mInGroup && isSynchronizationActive()) {
 			stopSync();
-		} else {
-			if (info.groupFormed && info.isGroupOwner) {
+		} else if (!isSynchronizationActive()) {
+			if (mInGroup && info.isGroupOwner) {
 				startSyncServer();
 				
 				mChangeListener.onConnectionSuccess(SyncRole.SERVER, this);
-			} else if (info.groupFormed) {
+			} else if (mInGroup) {
 				InetAddress groupOwnerAddress = info.groupOwnerAddress;
 				InetSocketAddress socketAddress = new InetSocketAddress(
 						groupOwnerAddress, P2PConstants.WIFI_DIRECT_SERVER_PORT);
