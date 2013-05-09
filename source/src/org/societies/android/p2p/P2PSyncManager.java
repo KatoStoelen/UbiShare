@@ -50,14 +50,6 @@ public abstract class P2PSyncManager {
 	public static final String TAG = "P2PSyncManager";
 	
 	/**
-	 * Map containing the sync manager instances. This is used to prevent
-	 * multiple instances of the same connection type. Having multiple
-	 * sync managers with different connection type is allowed.
-	 */
-	private static final Map<ConnectionType, P2PSyncManager> INSTANCES =
-			new HashMap<ConnectionType, P2PSyncManager>();
-
-	/**
 	 * P2P interface statuses are used to reflect the state of a
 	 * peer-to-peer interface, whether it is on or off, or even if
 	 * it is not supported.
@@ -111,15 +103,9 @@ public abstract class P2PSyncManager {
 			Context context,
 			ConnectionType connectionType,
 			IP2PChangeListener changeListener) {
-		if (INSTANCES.containsKey(connectionType))
-			throw new IllegalArgumentException("Sync Manager already exists: " +
-					connectionType);
-		
 		mContext = context;
 		mConnectionType = connectionType;
 		mChangeListener = changeListener;
-		
-		INSTANCES.put(connectionType, this);
 	}
 	
 	/**
@@ -357,9 +343,7 @@ public abstract class P2PSyncManager {
 	}
 	
 	/**
-	 * Gets the sync manager with the specified connection type. If a sync
-	 * manager with the specified connection type has already been created,
-	 * this instance will be returned.
+	 * Gets the sync manager with the specified connection type.
 	 * @param context The context to use.
 	 * @param listener The listener to notify of P2P changes.
 	 * @param connectionType The connection type to use.
@@ -367,24 +351,6 @@ public abstract class P2PSyncManager {
 	 * @see ConnectionType
 	 */
 	public static P2PSyncManager getSyncManager(
-			Context context,
-			IP2PChangeListener listener,
-			ConnectionType connectionType) {
-		if (INSTANCES.containsKey(connectionType))
-			return INSTANCES.get(connectionType);
-		else
-			return getInitializedSyncManager(
-					context, listener, connectionType);
-	}
-	
-	/**
-	 * Gets a new and initialized sync manager.
-	 * @param context The context to use.
-	 * @param listener The listener to notify of P2P changes.
-	 * @param connectionType The connection type to use.
-	 * @return An initialized <code>P2PSyncManager</code> instance.
-	 */
-	private static P2PSyncManager getInitializedSyncManager(
 			Context context,
 			IP2PChangeListener listener,
 			ConnectionType connectionType) {

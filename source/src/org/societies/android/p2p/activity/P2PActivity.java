@@ -92,6 +92,13 @@ public class P2PActivity extends Activity implements IP2PChangeListener {
 		mSyncManager.unregisterBroadcastReceiver();
 	}
 	
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		
+		Log.i(TAG, "DESTROYED");
+	}
+	
 	/**
 	 * On-Click handler of the magic button.
 	 * @param view The clicked view.
