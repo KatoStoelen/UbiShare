@@ -40,7 +40,7 @@ class P2PSyncClient extends Thread implements UpdateListener {
 	
 	public static final String TAG = "P2PSyncClient";
 	
-	private final Context mContext;
+	private final ContentResolver mResolver;
 	private final P2PConnection mConnection;
 	private final P2PConnectionListener mListener;
 	private final UpdateReceiver mReceiver;
@@ -65,7 +65,7 @@ class P2PSyncClient extends Thread implements UpdateListener {
 		mUniqueId = uniqueId;
 		mConnection = connection;
 		mListener = listener;
-		mContext = context;
+		mResolver = context.getContentResolver();
 		
 		mReceiver = new UpdateReceiver();
 		mPoller = new UpdatePoller(context, this);
@@ -156,8 +156,14 @@ class P2PSyncClient extends Thread implements UpdateListener {
 	private void insertEntities(Collection<Entity> entities) {
 		Log.i(TAG, "Inserting entities: " + entities.size());
 		
-		for (Entity entity : entities)
-			entity.insert(mContext.getContentResolver());
+		for (Entity entity : entities) {
+			entity.fetchLocalIds(mResolver);
+			
+			if (entity.getId() == Entity.ENTITY_DEFAULT_ID)
+				entity.insert(mResolver);
+			else
+				entity.update(mResolver);
+		}
 	}
 
 	/**
@@ -202,13 +208,13 @@ class P2PSyncClient extends Thread implements UpdateListener {
 	 * @throws InterruptedException If awaiting termination and thread is
 	 * interrupted.
 	 */
-	public void stopSyncClient(
-			boolean awaitTermination) throws InterruptedException {
+	public void stopSyncClient(boolean awaitTermination)
+			throws InterruptedException {
 		mStopping = true;
 		
 		mPoller.stopPolling();
 		
-		if (getState() == State.TIMED_WAITING)
+		if (getState() == State.WAITING)
 			interrupt();
 		
 		if (awaitTermination && isAlive())
@@ -339,20 +345,18 @@ class P2PSyncClient extends Thread implements UpdateListener {
 				
 				Log.i(TAG, "Entities in response: " + response.getEntities().size());
 				
-				ContentResolver resolver = mContext.getContentResolver();
-				
 				for (Entity entity : response.getEntities()) {
-					entity.fetchLocalIds(resolver);
+					entity.fetchLocalIds(mResolver);
 					
 					if (entity.getDeletedFlag() != 0
 							&& entity.getId() != Entity.ENTITY_DEFAULT_ID)
-						entity.delete(resolver);
+						entity.delete(mResolver);
 					else if (entity.getDeletedFlag() != 0)
 						Log.e(TAG, "Could not delete entity: id = -1");
 					else if (entity.getId() == Entity.ENTITY_DEFAULT_ID)
-						entity.insert(resolver);
+						entity.insert(mResolver);
 					else
-						entity.update(resolver);
+						entity.update(mResolver);
 				}
 			}
 		}
