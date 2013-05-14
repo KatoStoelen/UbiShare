@@ -15,7 +15,9 @@
  */
 package org.societies.android.p2p;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import android.app.Service;
@@ -38,12 +40,14 @@ public class P2PSyncClientService extends Service implements ISyncService {
 	/** Name of the unique ID extra. */
 	public static final String EXTRA_UNIQUE_ID = "extra_unique_id";
 	
-	private static final Map<ConnectionType, String> mSyncClientRunning =
-			new HashMap<ConnectionType, String>();
+	private static final Map<ConnectionType, Integer> mSyncClientRunning =
+			Collections.synchronizedMap(new HashMap<ConnectionType, Integer>());
 	
 	private final IBinder mBinder = new LocalServiceBinder(this);
-	private Map<ConnectionType, P2PSyncClient> mSyncClients =
-			new HashMap<ConnectionType, P2PSyncClient>();
+	private final Map<ConnectionType, P2PSyncClient> mSyncClients =
+			Collections.synchronizedMap(new HashMap<ConnectionType, P2PSyncClient>());
+	private final Map<ConnectionType, ServiceBroadcastReceiver> mBroadcastReceivers =
+			Collections.synchronizedMap(new HashMap<ConnectionType, ServiceBroadcastReceiver>());
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
@@ -54,19 +58,19 @@ public class P2PSyncClientService extends Service implements ISyncService {
 					intent.getParcelableExtra(EXTRA_LISTENER);
 			String uniqueId = intent.getStringExtra(EXTRA_UNIQUE_ID);
 			
-			if (!mSyncClients.containsKey(connection.getConnectionType())) {
+			ConnectionType connectionType = connection.getConnectionType();
+			
+			if (!mSyncClients.containsKey(connectionType)) {
 				P2PSyncClient syncClient = new P2PSyncClient(
 						uniqueId, connection, listener, this);
-				syncClient.start();
-				
-				mSyncClients.put(connection.getConnectionType(), syncClient);
-				mSyncClientRunning.put(connection.getConnectionType(), "true");
+
+				startSyncClient(syncClient, connectionType);
 			}
 		}
 		
 		return START_STICKY;
 	}
-
+	
 	@Override
 	public IBinder onBind(Intent intent) {
 		return mBinder;
@@ -77,6 +81,49 @@ public class P2PSyncClientService extends Service implements ISyncService {
 		super.onDestroy();
 		
 		stopAllSyncClients(false);
+	}
+	
+	/**
+	 * Starts the specified sync client.
+	 * @param syncClient The sync client to start.
+	 * @param connectionType The connection type in use.
+	 */
+	private void startSyncClient(
+			P2PSyncClient syncClient, ConnectionType connectionType) {
+		syncClient.start();
+		
+		mSyncClients.put(connectionType, syncClient);
+		mSyncClientRunning.put(connectionType, 1);
+		
+		registerBroadcastReceiver(connectionType);
+	}
+	
+	/**
+	 * Registers the service broadcast receiver of the specified connection
+	 * type.
+	 * @param connectionType The connection type in use.
+	 */
+	private void registerBroadcastReceiver(ConnectionType connectionType) {
+		ServiceBroadcastReceiver receiver = 
+				ServiceBroadcastReceiver.getBroadcastReceiver(
+						connectionType, this);
+		
+		registerReceiver(receiver, receiver.getIntentFilter());
+		
+		mBroadcastReceivers.put(connectionType, receiver);
+	}
+	
+	/**
+	 * Unregisters the service broadcast receiver or the specified connection
+	 * type.
+	 * @param connectionType The connection type in use.
+	 */
+	private void unregisterBroadcastReceiver(ConnectionType connectionType) {
+		if (mBroadcastReceivers.containsKey(connectionType)) {
+			unregisterReceiver(mBroadcastReceivers.get(connectionType));
+			
+			mBroadcastReceivers.remove(connectionType);
+		}
 	}
 	
 	/**
@@ -93,8 +140,9 @@ public class P2PSyncClientService extends Service implements ISyncService {
 					.stopSyncClient(awaitTermination);
 		} catch (InterruptedException e) { /* Ignore */ }
 		
-		mSyncClients.remove(connectionType);
 		mSyncClientRunning.remove(connectionType);
+		
+		unregisterBroadcastReceiver(connectionType);
 	}
 	
 	/**
@@ -103,8 +151,15 @@ public class P2PSyncClientService extends Service implements ISyncService {
 	 * clients have terminated.
 	 */
 	private void stopAllSyncClients(boolean awaitTermination) {
-		for (ConnectionType connectionType : mSyncClients.keySet())
-			stopSyncClient(connectionType, awaitTermination);
+		synchronized (mSyncClients) {
+			Iterator<Map.Entry<ConnectionType, P2PSyncClient>> iterator =
+					mSyncClients.entrySet().iterator();
+			
+			while (iterator.hasNext()) {
+				stopSyncClient(iterator.next().getKey(), awaitTermination);
+				iterator.remove();
+			}
+		}
 	}
 
 	/* (non-Javadoc)

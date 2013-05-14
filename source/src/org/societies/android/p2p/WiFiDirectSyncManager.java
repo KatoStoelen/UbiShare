@@ -240,9 +240,7 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 		
 		mInGroup = info.groupFormed;
 		
-		if (!mInGroup && isSynchronizationActive()) {
-			stopSync();
-		} else if (!isSynchronizationActive()) {
+		if (!isSynchronizationActive()) {
 			if (mInGroup && info.isGroupOwner) {
 				startSyncServer();
 				

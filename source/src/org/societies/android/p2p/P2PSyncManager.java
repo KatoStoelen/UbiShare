@@ -284,6 +284,8 @@ public abstract class P2PSyncManager {
 					mTerminationLock.wait();
 				}
 			}
+		} else {
+			Log.i(TAG, "Synchronization not running!");
 		}
 	}
 	
