@@ -35,7 +35,7 @@ abstract class Peer {
 	 * @param uniqueId The unique ID of the peer.
 	 * @param connectionType The connection type of the peer.
 	 */
-	public Peer(String uniqueId, ConnectionType connectionType) {
+	protected Peer(String uniqueId, ConnectionType connectionType) {
 		mUniqueId = uniqueId;
 		mConnectionType = connectionType;
 		mLastUpdateTime = 0;
@@ -107,5 +107,32 @@ abstract class Peer {
 	 */
 	public void setActive(boolean active) {
 		mActive = active;
+	}
+	
+	/**
+	 * Gets a new peer with the specified unique ID.
+	 * @param uniqueId The unique ID of the peer.
+	 * @param connection The connection to the peer.
+	 * @return A new <code>Peer</code>.
+	 */
+	public static Peer getPeer(String uniqueId, P2PConnection connection) {
+		if (connection.getConnectionType() == ConnectionType.BLUETOOTH) {
+			BluetoothConnection bluetoothConnection =
+					(BluetoothConnection) connection;
+			
+			return new BluetoothPeer(
+					uniqueId, bluetoothConnection.getRemoteDevice());
+		} else if (connection.getConnectionType() == ConnectionType.WIFI_DIRECT) {
+			WiFiDirectConnection wifiDirectConnection =
+					(WiFiDirectConnection) connection;
+			
+			return new WiFiDirectPeer(
+					uniqueId,
+					wifiDirectConnection.getRemoteIp(),
+					P2PConstants.WIFI_DIRECT_CLIENT_PORT);
+		} else {
+			throw new IllegalArgumentException("Unknown connection type: " +
+					connection.getConnectionType());
+		}
 	}
 }

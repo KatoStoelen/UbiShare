@@ -211,7 +211,7 @@ class P2PSyncServer extends Thread implements UpdateListener {
 			
 			Peer peer = null;
 			if ((peer = getPeer(request.getUniqueId())) == null) {
-				peer = getInitializedPeer(request.getUniqueId());
+				peer = Peer.getPeer(request.getUniqueId(), mConnection);
 				addPeer(peer);
 			}
 			peer.setActive(true);
@@ -283,28 +283,6 @@ class P2PSyncServer extends Thread implements UpdateListener {
 					entity.insert(resolver);
 				else
 					entity.update(resolver);
-			}
-		}
-		
-		/**
-		 * Initializes a new peer with the specified unique ID.
-		 * @param uniqueId The unique ID of the peer.
-		 * @return An initialized <code>Peer</code> instance.
-		 */
-		private Peer getInitializedPeer(String uniqueId) {
-			if (mConnection.getConnectionType() == ConnectionType.WIFI_DIRECT) {
-				WiFiDirectConnection connection = (WiFiDirectConnection) mConnection;
-				
-				return new WiFiDirectPeer(
-						uniqueId,
-						connection.getRemoteIp(),
-						P2PConstants.WIFI_DIRECT_CLIENT_PORT);
-			} else if (mConnection.getConnectionType() == ConnectionType.BLUETOOTH) {
-				BluetoothConnection connection = (BluetoothConnection) mConnection;
-				
-				return new BluetoothPeer(uniqueId, connection.getRemoteDevice());
-			} else {
-				throw new IllegalStateException("Unknown connection type");
 			}
 		}
 	}
