@@ -15,6 +15,9 @@
  */
 package org.societies.android.p2p;
 
+import org.societies.android.p2p.net.BluetoothConnectionListener;
+import org.societies.android.p2p.net.P2PConnectionListener;
+
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;

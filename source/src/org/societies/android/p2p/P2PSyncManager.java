@@ -17,6 +17,8 @@ package org.societies.android.p2p;
 
 import java.util.UUID;
 
+import org.societies.android.p2p.net.P2PConnectionListener;
+
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;

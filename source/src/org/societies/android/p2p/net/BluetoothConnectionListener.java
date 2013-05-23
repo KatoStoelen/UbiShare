@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.societies.android.p2p;
+package org.societies.android.p2p.net;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
+
+import org.societies.android.p2p.ConnectionType;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -26,12 +28,12 @@ import android.os.Parcelable;
  * 
  * @author Kato
  */
-class BluetoothConnectionListener extends P2PConnectionListener {
+public class BluetoothConnectionListener extends P2PConnectionListener {
 
 	/**
 	 * Initializes a new Bluetooth connection listener.
 	 */
-	protected BluetoothConnectionListener() {
+	public BluetoothConnectionListener() {
 		super(ConnectionType.BLUETOOTH);
 	}
 

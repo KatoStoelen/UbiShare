@@ -19,6 +19,10 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.List;
 
+import org.societies.android.p2p.net.P2PConnectionListener;
+import org.societies.android.p2p.net.WiFiDirectConnection;
+import org.societies.android.p2p.net.WiFiDirectConnectionListener;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;

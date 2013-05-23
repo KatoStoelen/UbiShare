@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.societies.android.p2p.net.P2PConnectionListener;
+
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;

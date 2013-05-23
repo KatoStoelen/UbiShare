@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.societies.android.p2p;
+package org.societies.android.p2p.net;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.util.UUID;
+
+import org.societies.android.p2p.ConnectionType;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -29,7 +31,7 @@ import android.os.Parcelable;
  * 
  * @author Kato
  */
-class BluetoothConnection extends P2PConnection {
+public class BluetoothConnection extends P2PConnection {
 
 	private BluetoothDevice mDevice;
 	private UUID mServiceId;

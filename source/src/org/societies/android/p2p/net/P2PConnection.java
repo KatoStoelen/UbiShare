@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.societies.android.p2p;
+package org.societies.android.p2p.net;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
 
+import org.societies.android.p2p.ConnectionType;
 import org.societies.android.p2p.entity.Request;
 import org.societies.android.p2p.entity.Response;
 
@@ -32,7 +33,7 @@ import android.os.Parcelable;
  * 
  * @author Kato
  */
-abstract class P2PConnection implements Parcelable {
+public abstract class P2PConnection implements Parcelable {
 	
 	public static final String TAG = "P2PConnection";
 	

@@ -25,6 +25,8 @@ import org.societies.android.p2p.UpdatePoller.UpdateListener;
 import org.societies.android.p2p.entity.Request;
 import org.societies.android.p2p.entity.Request.RequestType;
 import org.societies.android.p2p.entity.Response;
+import org.societies.android.p2p.net.P2PConnection;
+import org.societies.android.p2p.net.P2PConnectionListener;
 import org.societies.android.platform.entity.Entity;
 
 import android.content.ContentResolver;

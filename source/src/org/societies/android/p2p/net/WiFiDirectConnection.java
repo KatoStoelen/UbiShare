@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.societies.android.p2p;
+package org.societies.android.p2p.net;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -21,6 +21,8 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
+
+import org.societies.android.p2p.ConnectionType;
 
 
 import android.os.Parcel;
@@ -32,7 +34,7 @@ import android.util.Log;
  * 
  * @author Kato
  */
-class WiFiDirectConnection extends P2PConnection {
+public class WiFiDirectConnection extends P2PConnection {
 	
 	public static final String TAG = P2PConnection.TAG + ":WiFiDirect";
 

@@ -18,6 +18,10 @@ package org.societies.android.p2p;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 
+import org.societies.android.p2p.net.BluetoothConnection;
+import org.societies.android.p2p.net.P2PConnection;
+import org.societies.android.p2p.net.WiFiDirectConnection;
+
 /**
  * Base class of a peer in a peer-to-peer network.
  * 
