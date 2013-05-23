@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.societies.android.p2p;
+package org.societies.android.p2p.entity;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.util.UUID;
 
+import org.societies.android.p2p.ConnectionType;
 import org.societies.android.p2p.net.BluetoothConnection;
 import org.societies.android.p2p.net.P2PConnection;
 

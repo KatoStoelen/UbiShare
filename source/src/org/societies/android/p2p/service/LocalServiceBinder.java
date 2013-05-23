@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.societies.android.p2p;
+package org.societies.android.p2p.service;
 
 import android.os.Binder;
 
@@ -22,7 +22,7 @@ import android.os.Binder;
  * 
  * @author Kato
  */
-class LocalServiceBinder extends Binder {
+public class LocalServiceBinder extends Binder {
 
 	private ISyncService mServiceInstance;
 	

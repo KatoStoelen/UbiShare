@@ -13,13 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.societies.android.p2p;
+package org.societies.android.p2p.service;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.societies.android.p2p.ConnectionType;
+import org.societies.android.p2p.net.P2PConnection;
 import org.societies.android.p2p.net.P2PConnectionListener;
 
 import android.app.Service;
@@ -27,40 +29,52 @@ import android.content.Intent;
 import android.os.IBinder;
 
 /**
- * Service wrapper of the sync server.
+ * Service wrapper of the sync client. The use of a service enables the
+ * synchronization to run in the background even if the activity is
+ * suspended.
  * 
  * @author Kato
  */
-public class P2PSyncServerService extends Service implements ISyncService {
+public class P2PSyncClientService extends Service implements ISyncService {
 	
-	/** The connection listener. */
-	public static final String EXTRA_CONNECTION_LISTENER = "connection_listener";
+	/** Name of the P2P connection extra. */
+	public static final String EXTRA_CONNECTION = "extra_connection";
+	/** Name of the connection listener extra. */
+	public static final String EXTRA_LISTENER = "extra_listener";
+	/** Name of the unique ID extra. */
+	public static final String EXTRA_UNIQUE_ID = "extra_unique_id";
 	
-	public static final Map<ConnectionType, Integer> mSyncServerRunning =
+	private static final Map<ConnectionType, Integer> mSyncClientRunning =
 			Collections.synchronizedMap(new HashMap<ConnectionType, Integer>());
 	
 	private final IBinder mBinder = new LocalServiceBinder(this);
-	private Map<ConnectionType, P2PSyncServer> mSyncServers =
-			Collections.synchronizedMap(new HashMap<ConnectionType, P2PSyncServer>());
+	private final Map<ConnectionType, P2PSyncClient> mSyncClients =
+			Collections.synchronizedMap(new HashMap<ConnectionType, P2PSyncClient>());
 	private final Map<ConnectionType, ServiceBroadcastReceiver> mBroadcastReceivers =
 			Collections.synchronizedMap(new HashMap<ConnectionType, ServiceBroadcastReceiver>());
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		if (intent != null) {
+			P2PConnection connection = (P2PConnection)
+					intent.getParcelableExtra(EXTRA_CONNECTION);
 			P2PConnectionListener listener = (P2PConnectionListener)
-					intent.getParcelableExtra(EXTRA_CONNECTION_LISTENER);
+					intent.getParcelableExtra(EXTRA_LISTENER);
+			String uniqueId = intent.getStringExtra(EXTRA_UNIQUE_ID);
 			
-			if (!mSyncServers.containsKey(listener.getConnectionType())) {
-				P2PSyncServer syncServer = new P2PSyncServer(this, listener);
-				
-				startSyncServer(syncServer, listener.getConnectionType());
+			ConnectionType connectionType = connection.getConnectionType();
+			
+			if (!mSyncClients.containsKey(connectionType)) {
+				P2PSyncClient syncClient = new P2PSyncClient(
+						uniqueId, connection, listener, this);
+
+				startSyncClient(syncClient, connectionType);
 			}
 		}
 		
 		return START_STICKY;
 	}
-
+	
 	@Override
 	public IBinder onBind(Intent intent) {
 		return mBinder;
@@ -70,20 +84,20 @@ public class P2PSyncServerService extends Service implements ISyncService {
 	public void onDestroy() {
 		super.onDestroy();
 		
-		stopAllSyncServers(false);
+		stopAllSyncClients(false);
 	}
 	
 	/**
-	 * Starts the specified sync server.
-	 * @param syncServer The sync server to start.
+	 * Starts the specified sync client.
+	 * @param syncClient The sync client to start.
 	 * @param connectionType The connection type in use.
 	 */
-	private void startSyncServer(
-			P2PSyncServer syncServer, ConnectionType connectionType) {
-		syncServer.start();
+	private void startSyncClient(
+			P2PSyncClient syncClient, ConnectionType connectionType) {
+		syncClient.start();
 		
-		mSyncServers.put(connectionType, syncServer);
-		mSyncServerRunning.put(connectionType, 1);
+		mSyncClients.put(connectionType, syncClient);
+		mSyncClientRunning.put(connectionType, 1);
 		
 		registerBroadcastReceiver(connectionType);
 	}
@@ -115,37 +129,38 @@ public class P2PSyncServerService extends Service implements ISyncService {
 			mBroadcastReceivers.remove(connectionType);
 		}
 	}
-
+	
 	/**
-	 * Stops the sync server with the specified connection type.
-	 * @param connectionType The connection type of the server to stop.
+	 * Stops the sync client with the specified connection type.
+	 * @param connectionType The connection type of the client to stop.
 	 * @param awaitTermination Whether or not to block until the sync
-	 * server has terminated.
+	 * client has terminated.
 	 */
-	private void stopSyncServer(
+	private void stopSyncClient(
 			ConnectionType connectionType, boolean awaitTermination) {
 		try {
-			if (mSyncServers.containsKey(connectionType))
-				mSyncServers.get(connectionType).stopServer(awaitTermination);
+			if (mSyncClients.containsKey(connectionType))
+				mSyncClients.get(connectionType)
+					.stopSyncClient(awaitTermination);
 		} catch (InterruptedException e) { /* Ignore */ }
 		
-		mSyncServerRunning.remove(connectionType);
+		mSyncClientRunning.remove(connectionType);
 		
 		unregisterBroadcastReceiver(connectionType);
 	}
 	
 	/**
-	 * Stops all the currently running sync servers.
+	 * Stops all the currently running sync clients.
 	 * @param awaitTermination Whether or not to block until the sync
-	 * servers have terminated.
+	 * clients have terminated.
 	 */
-	private void stopAllSyncServers(boolean awaitTermination) {
-		synchronized (mSyncServers) {
-			Iterator<Map.Entry<ConnectionType, P2PSyncServer>> iterator =
-					mSyncServers.entrySet().iterator();
+	private void stopAllSyncClients(boolean awaitTermination) {
+		synchronized (mSyncClients) {
+			Iterator<Map.Entry<ConnectionType, P2PSyncClient>> iterator =
+					mSyncClients.entrySet().iterator();
 			
 			while (iterator.hasNext()) {
-				stopSyncServer(iterator.next().getKey(), awaitTermination);
+				stopSyncClient(iterator.next().getKey(), awaitTermination);
 				iterator.remove();
 			}
 		}
@@ -155,9 +170,9 @@ public class P2PSyncServerService extends Service implements ISyncService {
 	 * @see org.societies.android.p2p.ISyncService#stopSync(org.societies.android.p2p.ConnectionType, boolean)
 	 */
 	public void stopSync(ConnectionType connectionType, boolean awaitTermination) {
-		stopSyncServer(connectionType, awaitTermination);
+		stopSyncClient(connectionType, awaitTermination);
 		
-		if (mSyncServers.isEmpty())
+		if (mSyncClients.isEmpty())
 			stopSelf();
 	}
 
@@ -165,19 +180,19 @@ public class P2PSyncServerService extends Service implements ISyncService {
 	 * @see org.societies.android.p2p.ISyncService#stopAllSync(boolean)
 	 */
 	public void stopAllSync(boolean awaitTermination) {
-		stopAllSyncServers(awaitTermination);
+		stopAllSyncClients(awaitTermination);
 		
 		stopSelf();
 	}
 	
 	/**
-	 * Gets whether or not the sync server with the specified connection type is
-	 * running.
-	 * @param connectionType The connection type of the sync server.
-	 * @return <code>true</code> if the sync server is running, otherwise
+	 * Gets whether or not the sync client with the specified connection type
+	 * is running.
+	 * @param connectionType The connection type of the sync client.
+	 * @return <code>true</code> if the sync client is running, otherwise
 	 * <code>false</code>.
 	 */
-	public static boolean isSyncServerRunning(ConnectionType connectionType) {
-		return mSyncServerRunning.containsKey(connectionType);
+	public static boolean isSyncClientRunning(ConnectionType connectionType) {
+		return mSyncClientRunning.containsKey(connectionType);
 	}
 }

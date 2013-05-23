@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.societies.android.p2p;
+package org.societies.android.p2p.service;
+
+import org.societies.android.p2p.ConnectionType;
 
 import android.content.Context;
 import android.content.Intent;

@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.societies.android.p2p.P2PSyncManager.P2PInterfaceStatus;
 import org.societies.android.p2p.P2PSyncManager.SyncRole;
+import org.societies.android.p2p.entity.P2PDevice;
 
 /**
  * An interface defining required methods of P2P listeners.

@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.societies.android.p2p;
+package org.societies.android.p2p.entity;
 
 import java.util.Locale;
+
+import org.societies.android.p2p.ConnectionType;
 
 /**
  * A base class of P2P devices. This class is used to provide a generalization

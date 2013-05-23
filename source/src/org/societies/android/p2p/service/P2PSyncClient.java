@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.societies.android.p2p;
+package org.societies.android.p2p.service;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -21,12 +21,12 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import org.societies.android.p2p.UpdatePoller.UpdateListener;
 import org.societies.android.p2p.entity.Request;
 import org.societies.android.p2p.entity.Request.RequestType;
 import org.societies.android.p2p.entity.Response;
 import org.societies.android.p2p.net.P2PConnection;
 import org.societies.android.p2p.net.P2PConnectionListener;
+import org.societies.android.p2p.service.UpdatePoller.UpdateListener;
 import org.societies.android.platform.entity.Entity;
 
 import android.content.ContentResolver;

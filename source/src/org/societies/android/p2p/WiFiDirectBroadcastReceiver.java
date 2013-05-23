@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.societies.android.p2p.P2PSyncManager.P2PInterfaceStatus;
+import org.societies.android.p2p.entity.P2PDevice;
+import org.societies.android.p2p.entity.WiFiDirectP2PDevice;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

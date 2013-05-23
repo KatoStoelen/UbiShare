@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.societies.android.p2p.IP2PChangeListener;
-import org.societies.android.p2p.P2PDevice;
 import org.societies.android.p2p.P2PSyncManager;
 import org.societies.android.p2p.ConnectionType;
 import org.societies.android.p2p.P2PSyncManager.P2PInterfaceStatus;
 import org.societies.android.p2p.P2PSyncManager.SyncRole;
+import org.societies.android.p2p.entity.P2PDevice;
 import org.societies.android.platform.R;
 
 import android.os.Bundle;

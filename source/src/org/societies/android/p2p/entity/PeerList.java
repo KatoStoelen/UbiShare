@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.societies.android.p2p;
+package org.societies.android.p2p.entity;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -23,7 +23,7 @@ import java.util.Iterator;
  * 
  * @author Kato
  */
-class PeerList extends ArrayList<Peer> {
+public class PeerList extends ArrayList<Peer> {
 
 	/** Unique Id. */
 	private static final long serialVersionUID = -2322771170730376896L;

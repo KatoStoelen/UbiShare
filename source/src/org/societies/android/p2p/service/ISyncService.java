@@ -13,14 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.societies.android.p2p;
+package org.societies.android.p2p.service;
+
+import org.societies.android.p2p.ConnectionType;
 
 /**
  * Interface defining required methods of sync services.
  * 
  * @author Kato
  */
-interface ISyncService {
+public interface ISyncService {
 
 	/**
 	 * Stops the sync service of the specified connection type.
