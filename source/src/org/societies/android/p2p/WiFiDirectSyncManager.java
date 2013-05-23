@@ -172,19 +172,30 @@ class WiFiDirectSyncManager extends P2PSyncManager implements ConnectionInfoList
 		
 		Log.i(TAG, "Disconnecting...");
 		
-		mWifiP2pManager.removeGroup(mChannel, new ActionListener() {
-			public void onSuccess() {
-				Log.i(TAG, "Disconnect Initiated");
-				mChangeListener.onDisconnectSuccess(WiFiDirectSyncManager.this);
+		new Thread(new Runnable() {
+			public void run() {
+				try {
+					stopSync(true);
+				} catch (InterruptedException e) {
+					Log.e(TAG, "Interrupted while waiting for sync to stop", e);
+				}
+				
+				mWifiP2pManager.removeGroup(mChannel, new ActionListener() {
+					public void onSuccess() {
+						Log.i(TAG, "Disconnect Initiated");
+						mChangeListener.onDisconnectSuccess(
+								WiFiDirectSyncManager.this);
+					}
+					
+					public void onFailure(int reason) {
+						Log.i(TAG, "Disconnect Failed: " + reason);
+						mChangeListener.onDisconnectFailure(
+								errorMessagesWifiDirect.get(reason),
+								WiFiDirectSyncManager.this);
+					}
+				});
 			}
-			
-			public void onFailure(int reason) {
-				Log.i(TAG, "Disconnect Failed: " + reason);
-				mChangeListener.onDisconnectFailure(
-						errorMessagesWifiDirect.get(reason),
-						WiFiDirectSyncManager.this);
-			}
-		});
+		}).start();
 	}
 	
 	@Override

@@ -86,11 +86,4 @@ public interface IP2PChangeListener {
 	 * @param sender The sender of the notification.
 	 */
 	public void onDisconnectSuccess(Object sender);
-	
-	/**
-	 * Called when the synchronization has stopped after a call to
-	 * <code>stopSync()</code>.
-	 * @param sender The sender of the notification.
-	 */
-	public void onSyncStopped(Object sender);
 }

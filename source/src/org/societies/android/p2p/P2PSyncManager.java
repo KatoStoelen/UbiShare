@@ -297,18 +297,6 @@ public abstract class P2PSyncManager {
 	}
 	
 	/**
-	 * Stops the synchronization. This is an asynchronous call.
-	 * The P2P change listener will receive a notification when the
-	 * synchronization has stopped.
-	 * @see IP2PChangeListener#onSyncStopped(Object)
-	 */
-	public void stopSync() {
-		try {
-			stopSync(false);
-		} catch (InterruptedException e) { /* Ignore */ }
-	}
-
-	/**
 	 * Gets the connection type currently being used.
 	 * @return The connection type in use.
 	 */
@@ -344,8 +332,6 @@ public abstract class P2PSyncManager {
 				synchronized (mTerminationLock) {
 					mTerminationLock.notifyAll();
 				}
-				
-				mChangeListener.onSyncStopped(P2PSyncManager.this);
 			}
 		};
 	}

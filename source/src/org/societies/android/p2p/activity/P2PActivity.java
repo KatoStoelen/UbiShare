@@ -176,7 +176,7 @@ public class P2PActivity extends Activity implements IP2PChangeListener {
 	 * Stops the synchronization and disconnects from the P2P group.
 	 */
 	private void disconnect() {
-		mSyncManager.stopSync();
+		mSyncManager.disconnect();
 	}
 	
 	/**
@@ -288,14 +288,5 @@ public class P2PActivity extends Activity implements IP2PChangeListener {
 		
 		if (mClosing)
 			finish();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.societies.android.p2p.IP2PChangeListener#onSyncStopped(java.lang.Object)
-	 */
-	public void onSyncStopped(Object sender) {
-		Log.i(TAG, "Received Notification: syncStopped");
-		
-		mSyncManager.disconnect();
 	}
 }
