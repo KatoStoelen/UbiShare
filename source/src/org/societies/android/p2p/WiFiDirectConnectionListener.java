@@ -31,7 +31,7 @@ import android.os.Parcelable;
 class WiFiDirectConnectionListener extends P2PConnectionListener {
 	
 	private int mPort;
-	transient private ServerSocket mListener;
+	private ServerSocket mListener;
 	private boolean mIsInitialized = false;
 	
 	/**
