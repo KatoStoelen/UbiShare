@@ -99,7 +99,10 @@ class UpdatePoller extends Thread {
 	 */
 	public void resetEntityDirtyFlag(Collection<Entity> entities) {
 		synchronized (mPendingEntities) {
+			int pendingSize = mPendingEntities.size();
 			mPendingEntities.removeAll(entities);
+			
+			Log.i(TAG, "Removed pending entities: " + (pendingSize - mPendingEntities.size()));
 		}
 		
 		for (Entity entity : entities) {
@@ -147,8 +150,7 @@ class UpdatePoller extends Thread {
 			
 			synchronized (mPendingEntities) {
 				for (Entity pendingEntity : mPendingEntities) {
-					if (entity.getClass().equals(pendingEntity.getClass()) &&
-							entity.getId() == pendingEntity.getId()) {
+					if (entity.getUniqueId().equals(pendingEntity.getUniqueId())) {
 						isPending = true;
 						break;
 					}

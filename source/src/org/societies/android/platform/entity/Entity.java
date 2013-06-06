@@ -593,4 +593,12 @@ public abstract class Entity {
 	public void setDeletedFlag(int deleted) {
 		this.deleted = deleted;
 	}
+	
+	/**
+	 * Gets the unique ID of the entity. Format [Class Name]:[ID].
+	 * @return The unique ID of the entity.
+	 */
+	public String getUniqueId() {
+		return getClass().getCanonicalName() + ":" + getId();
+	}
 }

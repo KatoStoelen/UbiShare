@@ -160,6 +160,7 @@ class P2PSyncClient extends Thread implements UpdateListener {
 		
 		for (Entity entity : entities) {
 			entity.fetchLocalIds(mResolver);
+			entity.setDirtyFlag(0);
 			
 			if (entity.getId() == Entity.ENTITY_DEFAULT_ID)
 				entity.insert(mResolver);
@@ -349,6 +350,7 @@ class P2PSyncClient extends Thread implements UpdateListener {
 				
 				for (Entity entity : response.getEntities()) {
 					entity.fetchLocalIds(mResolver);
+					entity.setDirtyFlag(0);
 					
 					if (entity.getDeletedFlag() != 0
 							&& entity.getId() != Entity.ENTITY_DEFAULT_ID)

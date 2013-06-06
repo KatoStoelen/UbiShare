@@ -259,8 +259,11 @@ class P2PSyncServer extends Thread implements UpdateListener {
 			synchronized (mPeers) {
 				for (Peer peer : mPeers) {
 					if (peer.isActive() &&
-							!peer.getUniqueId().equals(request.getUniqueId()))
+							!peer.getUniqueId().equals(request.getUniqueId())) {
 						new UpdateSender(peer, updateResponse).start();
+						
+						Log.i(TAG, "Sending received updates to: " + peer.getUniqueId());
+					}
 				}
 			}
 			
@@ -277,6 +280,7 @@ class P2PSyncServer extends Thread implements UpdateListener {
 			
 			for (Entity entity : update) {
 				entity.fetchLocalIds(resolver);
+				entity.setDirtyFlag(0);
 				
 				if (entity.getDeletedFlag() != 0 &&
 						entity.getId() != Entity.ENTITY_DEFAULT_ID)
